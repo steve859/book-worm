@@ -26,6 +26,9 @@ const editingUser = ref(null)
 const addingUser = ref(false)
 const selectedRoles = ref([])
 
+// Ref to UserTable component
+const userTableRef = ref(null)
+
 // Computed filtered users based on search and roles
 const filteredUsers = computed(() => {
   let filtered = users.value || []
@@ -111,6 +114,11 @@ async function handleDeleteUser(userId) {
     console.log('[Users.vue] deleteUserAPI completed successfully')
   } catch (e) {
     console.error('Xoá user thất bại', e.response?.data || e.message)
+    
+    // Show error dialog with fixed message (same as BookTable)
+    if (userTableRef.value) {
+      userTableRef.value.showDeleteError()
+    }
   }
 }
 </script>
@@ -138,7 +146,7 @@ async function handleDeleteUser(userId) {
       </div>
 
       <UserTable :filteredItems="filteredUsers" @view-user="handleViewUser" @edit-user="handleEditUser"
-        @delete-user="handleDeleteUser" />
+        @delete-user="handleDeleteUser" ref="userTableRef" />
 
       <ButtonCRUD @click="handleAddUser">
         <template #btn-text>

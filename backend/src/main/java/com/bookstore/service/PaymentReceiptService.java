@@ -101,30 +101,23 @@ public class PaymentReceiptService {
         if (paymentReceipt == null)
             return;
 
+        log.info("Deleting payment receipt {} - reverting debt and updating reports", paymentReceiptId);
+
         Users user = userRepository.findById(paymentReceipt.getPayerId()).orElse(null);
         if (user != null && user.getDebtAmount() != null) {
+            // Revert user debt amount
             BigDecimal newDebt = user.getDebtAmount().add(paymentReceipt.getTotalAmount());
             user.setDebtAmount(newDebt);
             userRepository.save(user);
-            // Update monthly debt report (reduce debtPayment)
-            LocalDate month = paymentReceipt.getCreateAt() != null
-                    ? paymentReceipt.getCreateAt().withDayOfMonth(paymentReceipt.getCreateAt().lengthOfMonth())
-                    : LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth());
-            MonthlyDebtReports report = monthlyDebtReportRepository
-                    .findByUserIdAndReportMonth(user.getId(), month)
-                    .orElse(null);
-            if (report != null) {
-                BigDecimal newPaid = report.getDebtPayment().subtract(paymentReceipt.getTotalAmount());
-                report.setDebtPayment(newPaid);
-                report.setClosingDebt(report.getOpeningDebt().add(report.getDebtIncrease()).subtract(newPaid));
-                monthlyDebtReportRepository.save(report);
-            }
+            log.info("Reverted user {} debt by {}, new debt: {}",
+                    user.getId(), paymentReceipt.getTotalAmount(), newDebt);
 
-            // log detail reversal
-            monthlyDebtReportDetailService.createMonthlyDebtReportDetail(String.valueOf(user.getId()),
-                    paymentReceipt.getTotalAmount(), "Debit");
+            // Use specific payment reversal method to properly reduce debtPayment
+            monthlyDebtReportDetailService.reversePaymentDetail(String.valueOf(user.getId()),
+                    paymentReceipt.getTotalAmount());
         }
 
         paymentReceiptRepository.delete(paymentReceipt);
+        log.info("Successfully deleted payment receipt {} and reverted debt changes", paymentReceiptId);
     }
 }

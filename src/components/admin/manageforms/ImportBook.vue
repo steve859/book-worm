@@ -12,6 +12,7 @@ import EditImportForm from '../CRUDforms/EditImportForm.vue'
 import ViewImportForm from '../CRUDforms/ViewImportForm.vue'
 import SearchFrame from '@/components/admin/frames/SearchFrame.vue'
 import BackButton from '../buttons/BackButton.vue'
+import AppDialog from '../AppDialog.vue'
 
 const router = useRouter()
 const store = useImportReceiptFormStore()
@@ -20,6 +21,9 @@ const receipts = computed(() => store.receipts)
 const editingReceipt = ref(null)
 const viewingReceipt = ref(null)
 const searchQuery = ref('')
+
+const errorDialog = ref(false)
+const errorMessage = ref('')
 
 const filteredReceipts = computed(() => {
   if (!searchQuery.value) {
@@ -52,7 +56,22 @@ async function handleEdit(item) {
 }
 
 async function deleteReceipt(id) {
-  await store.deleteReceipt(id)
+  try {
+    await store.deleteReceipt(id)
+  } catch (error) {
+    console.error('Delete receipt failed:', error)
+    
+    // Get error message from API response or use default
+    let message = 'This import receipt cannot be deleted because it would cause book quantities to become negative.'
+    
+    if (error.response?.data?.message) {
+      message = error.response.data.message
+    } else if (error.friendlyMessage) {
+      message = error.friendlyMessage
+    }
+    
+    showErrorDialog(message)
+  }
 }
 
 async function handleAdd() {
@@ -75,6 +94,16 @@ function closeView() {
 
 function goBack() {
   router.push('/manage')
+}
+
+function showErrorDialog(message) {
+  errorMessage.value = message
+  errorDialog.value = true
+}
+
+function closeErrorDialog() {
+  errorDialog.value = false
+  errorMessage.value = ''
 }
 </script>
 
@@ -112,6 +141,15 @@ function goBack() {
     <div v-else-if="viewingReceipt" class="detail-wrapper">
       <ViewImportForm :import-receipt="viewingReceipt" @close="closeView" />
     </div>
+
+    <!-- Error Dialog -->
+    <AppDialog
+      v-model="errorDialog"
+      title="Cannot Delete Import Receipt"
+      :message="errorMessage"
+      :show-cancel="false"
+      @confirm="closeErrorDialog"
+    />
   </div>
 </template>
 

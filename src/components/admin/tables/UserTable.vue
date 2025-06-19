@@ -52,6 +52,14 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Delete Error Dialog -->
+    <AppDialog 
+      v-model="errorDialog" 
+      title="Cannot Delete User"
+      :message="errorMessage" 
+      :show-cancel="false"
+      @confirm="closeErrorDialog" />
   </v-container>
 </template>
 
@@ -59,6 +67,7 @@
 import EditIcon from '@/assets/icons-vue/edit.vue'
 import ViewIcon from '@/assets/icons-vue/receipt.vue'
 import DeleteIcon from '@/assets/icons-vue/trash.vue'
+import AppDialog from '../AppDialog.vue'
 import { useUser } from '@/data/user'
 import { ref, watch, computed } from 'vue'
 import { storeToRefs } from 'pinia'
@@ -83,6 +92,8 @@ const emit = defineEmits(['view-user', 'edit-user', 'delete-user'])
 
 const dialog = ref(false)
 const userToDeleteId = ref(null)
+const errorDialog = ref(false)
+const errorMessage = ref('')
 
 function openDeleteDialog(userId) {
   userToDeleteId.value = userId
@@ -96,6 +107,21 @@ function confirmDelete() {
     userToDeleteId.value = null
   }
 }
+
+function showDeleteError(message = 'This user cannot be deleted because it is still tied to other data in the system.') {
+  errorMessage.value = message
+  errorDialog.value = true
+}
+
+function closeErrorDialog() {
+  errorDialog.value = false
+  errorMessage.value = ''
+}
+
+// Expose function to parent component
+defineExpose({
+  showDeleteError
+})
 
 const headers = [
   { title: 'ID', key: 'id' },

@@ -50,6 +50,12 @@ export const usePaymentReceipts = defineStore('paymentReceipts', () => {
             error.value = null
             await api.post('/paymentReceipts', paymentReceiptData)
             await fetchPaymentReceipts()
+            // Refresh user data to update debt amounts in PaymentReceipt form
+            try {
+                await userStore.fetchUsers()
+            } catch (err) {
+                console.warn('[PaymentReceipts] Failed to refresh users after payment creation', err)
+            }
             return { success: true }
         } catch (e) {
             error.value = e
@@ -73,6 +79,12 @@ export const usePaymentReceipts = defineStore('paymentReceipts', () => {
             error.value = null
             await api.delete(`/paymentReceipts/${receiptId}`)
             await fetchPaymentReceipts()
+            // Refresh user data to update debt amounts in PaymentReceipt form
+            try {
+                await userStore.fetchUsers()
+            } catch (err) {
+                console.warn('[PaymentReceipts] Failed to refresh users after payment deletion', err)
+            }
             return { success: true }
         } catch (e) {
             error.value = e
