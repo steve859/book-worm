@@ -30,35 +30,47 @@ import java.time.LocalDate;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class MonthlyInventoryReportDetailService {
-    @Autowired
-    MonthlyInventoryReportDetailRepository monthlyInventoryReportDetailRepository;
-    @Autowired
-    MonthlyInventoryReportDetailMapper monthlyInventoryReportDetailMapper;
-    @Autowired
-    private MonthlyInventoryReportRepository monthlyInventoryReportRepository;
-    @Autowired
-    private MonthlyInventoryReportService monthlyInventoryReportService;
+        @Autowired
+        MonthlyInventoryReportDetailRepository monthlyInventoryReportDetailRepository;
+        @Autowired
+        MonthlyInventoryReportDetailMapper monthlyInventoryReportDetailMapper;
+        @Autowired
+        private MonthlyInventoryReportRepository monthlyInventoryReportRepository;
+        @Autowired
+        private MonthlyInventoryReportService monthlyInventoryReportService;
 
-    public MonthlyInventoryReportDetailResponse createMonthlyInventoryReportDetail(Integer bookId, int amount, String type) {
-        MonthlyInventoryReportDetails monthlyInventoryReportDetail = MonthlyInventoryReportDetails.builder()
-                .bookId(bookId)
-                .amount(amount)
-                .type(type)
-                .reportDate(LocalDate.now())
-                .build();
-        MonthlyInventoryReports monthlyInventoryReport = monthlyInventoryReportRepository.findByBookIdAndReportMonth(bookId,monthlyInventoryReportDetail.getReportDate().withDayOfMonth(1)).orElse(null);
-        if(monthlyInventoryReport == null) {
-            monthlyInventoryReportService.createMonthlyInventoryReport(bookId,monthlyInventoryReportDetail.getReportDate().withDayOfMonth(1));
-            monthlyInventoryReport = monthlyInventoryReportRepository.findByBookIdAndReportMonth(bookId,monthlyInventoryReportDetail.getReportDate().withDayOfMonth(1)).orElse(null);
+        public MonthlyInventoryReportDetailResponse createMonthlyInventoryReportDetail(Integer bookId, int amount,
+                        String type) {
+                MonthlyInventoryReportDetails monthlyInventoryReportDetail = MonthlyInventoryReportDetails.builder()
+                                .bookId(bookId)
+                                .amount(amount)
+                                .type(type)
+                                .reportDate(LocalDate.now())
+                                .build();
+                LocalDate monthKey = monthlyInventoryReportDetail.getReportDate()
+                                .withDayOfMonth(monthlyInventoryReportDetail.getReportDate().lengthOfMonth());
+                MonthlyInventoryReports monthlyInventoryReport = monthlyInventoryReportRepository
+                                .findByBookIdAndReportMonth(bookId, monthKey)
+                                .orElse(null);
+                if (monthlyInventoryReport == null) {
+                        monthlyInventoryReportService.createMonthlyInventoryReport(bookId, monthKey);
+                        monthlyInventoryReport = monthlyInventoryReportRepository
+                                        .findByBookIdAndReportMonth(bookId, monthKey)
+                                        .orElse(null);
+                }
+                monthlyInventoryReportDetail.setInventoryReport(monthlyInventoryReport);
+                monthlyInventoryReportDetailRepository.save(monthlyInventoryReportDetail);
+                monthlyInventoryReportService.updateMonthlyInventoryReport(monthlyInventoryReportDetail, amount, type);
+                return monthlyInventoryReportDetailMapper
+                                .toMonthlyInventoryReportDetailResponse(monthlyInventoryReportDetail);
         }
-        monthlyInventoryReportDetail.setInventoryReport(monthlyInventoryReport);
-        monthlyInventoryReportDetailRepository.save(monthlyInventoryReportDetail);
-        monthlyInventoryReportService.updateMonthlyInventoryReport(monthlyInventoryReportDetail,amount,type);
-        return monthlyInventoryReportDetailMapper.toMonthlyInventoryReportDetailResponse(monthlyInventoryReportDetail);
-    }
 
-//    public MonthlyInventoryReportDetailResponse updateMonthlyInventoryReportDetail(Integer monthlyInventoryReportDetailId, int amount) {
-//        MonthlyInventoryReportDetails monthlyInventoryReportDetail = monthlyInventoryReportDetailRepository.findById(monthlyInventoryReportDetailId).orElseThrow(()->new AppException(ErrorCode.MONTHLY_INVENTORY_REPORT_DETAIL_NOT_EXISTED));
-//
-//    }
+        // public MonthlyInventoryReportDetailResponse
+        // updateMonthlyInventoryReportDetail(Integer monthlyInventoryReportDetailId,
+        // int amount) {
+        // MonthlyInventoryReportDetails monthlyInventoryReportDetail =
+        // monthlyInventoryReportDetailRepository.findById(monthlyInventoryReportDetailId).orElseThrow(()->new
+        // AppException(ErrorCode.MONTHLY_INVENTORY_REPORT_DETAIL_NOT_EXISTED));
+        //
+        // }
 }

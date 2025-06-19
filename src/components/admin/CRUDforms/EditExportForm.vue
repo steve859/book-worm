@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useExportReceiptFormStore } from '@/data/exportReceipts.js'
 import CRUDMainForm from './CRUDMainForm.vue'
 import TitleText from '../texts/TitleText.vue'
@@ -22,6 +22,23 @@ const selectedBook = ref(null);
 const quantity = ref('')
 const paidAmount = ref(props.exportReceipt.paidAmount || '')
 
+// Tính tổng tiền tự động
+const totalAmount = computed(() => {
+  if (!props.exportReceipt.books || props.exportReceipt.books.length === 0) {
+    return 0
+  }
+  return props.exportReceipt.books.reduce((total, book) => {
+    const price = book.export_price || book.sellPrice || 0
+    const quantity = book.quantity || 0
+    return total + (price * quantity)
+  }, 0)
+})
+
+// Cập nhật paidAmount khi totalAmount thay đổi
+watch(totalAmount, (newTotal) => {
+  paidAmount.value = newTotal
+})
+
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
 const dialogMessage = ref('')
@@ -31,10 +48,6 @@ function showValidationDialog(title, message) {
   dialogMessage.value = message
   dialogVisible.value = true
 }
-
-watch(() => props.exportReceipt.paidAmount, (val) => {
-  paidAmount.value = val
-})
 
 // ĐẢM BẢO props.exportReceipt.books luôn là mảng
 if (!props.exportReceipt.books) {

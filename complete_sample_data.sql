@@ -949,5 +949,49 @@ VALUES (
         'Payment'
     );
 
--- Step 4: Re-enable foreign key checks.
+ALTER TABLE monthly_debt_reports
+ADD CONSTRAINT unique_user_month UNIQUE (user_id, report_month);
+
+ALTER TABLE monthly_inventory_reports
+ADD CONSTRAINT unique_book_month UNIQUE (book_id, report_month);
+
+/* ---------- BOOK & AUTHOR / CATEGORY (N-N) ---------- */
+ALTER TABLE authors_books
+ADD CONSTRAINT fk_ab_book FOREIGN KEY (book_id) REFERENCES books (book_id) ON DELETE CASCADE ON UPDATE CASCADE,
+ADD CONSTRAINT fk_ab_author FOREIGN KEY (author_id) REFERENCES authors (author_id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE books_categories
+ADD CONSTRAINT fk_bc_book FOREIGN KEY (book_id) REFERENCES books (book_id) ON DELETE CASCADE ON UPDATE CASCADE,
+ADD CONSTRAINT fk_bc_category FOREIGN KEY (category_id) REFERENCES categories (category_id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+/* ---------- IMPORT RECEIPTS ---------- */
+ALTER TABLE books_import_receipts
+ADD CONSTRAINT fk_bir_book FOREIGN KEY (book_id) REFERENCES books (book_id) ON DELETE CASCADE ON UPDATE CASCADE,
+ADD CONSTRAINT fk_bir_receipt FOREIGN KEY (import_receipt_id) REFERENCES import_receipts (import_receipt_id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+/* ---------- INVOICES ---------- */
+ALTER TABLE books_invoices
+ADD CONSTRAINT fk_binv_book FOREIGN KEY (book_id) REFERENCES books (book_id) ON DELETE CASCADE ON UPDATE CASCADE,
+ADD CONSTRAINT fk_binv_invoice FOREIGN KEY (invoice_id) REFERENCES invoices (invoice_id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE invoices
+ADD CONSTRAINT fk_invoice_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+ADD CONSTRAINT fk_invoice_admin FOREIGN KEY (admin_id) REFERENCES users (user_id) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+/* ---------- PAYMENT RECEIPTS ---------- */
+ALTER TABLE payment_receipts_invoices
+ADD CONSTRAINT fk_prinv_receipt FOREIGN KEY (payment_receipt_id) REFERENCES payment_receipts (payment_receipt_id) ON DELETE CASCADE ON UPDATE CASCADE,
+ADD CONSTRAINT fk_prinv_invoice FOREIGN KEY (invoice_id) REFERENCES invoices (invoice_id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE payment_receipts
+ADD CONSTRAINT fk_pr_user FOREIGN KEY (payer_id) REFERENCES users (user_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+ADD CONSTRAINT fk_pr_admin FOREIGN KEY (admin_id) REFERENCES users (user_id) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+/* ---------- MONTHLY REPORT DETAILS ---------- */
+ALTER TABLE monthly_debt_report_details
+ADD CONSTRAINT fk_mdrd_report FOREIGN KEY (debt_report_id) REFERENCES monthly_debt_reports (debt_report_id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE monthly_inventory_report_details
+ADD CONSTRAINT fk_mird_report FOREIGN KEY (inventory_report_id) REFERENCES monthly_inventory_reports (inventory_report_id) ON DELETE CASCADE ON UPDATE CASCADE;
+
 SET FOREIGN_KEY_CHECKS = 1;

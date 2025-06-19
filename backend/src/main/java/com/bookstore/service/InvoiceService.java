@@ -51,6 +51,8 @@ public class InvoiceService {
     private MonthlyDebtReportDetailService monthlyDebtReportDetailService;
     @Autowired
     private MonthlyInventoryReportDetailService monthlyInventoryReportDetailService;
+    @Autowired
+    private ParameterService parameterService;
 
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
@@ -61,7 +63,12 @@ public class InvoiceService {
             throw new AppException(ErrorCode.USER_NOT_EXISTED);
         }
         Users customer = customerOpt.get();
-        if (customer.getDebtAmount().compareTo(BigDecimal.valueOf(1000000)) > 0) {
+        double maxDebtParam = 500000;
+        try {
+            maxDebtParam = parameterService.getParamValue("maxDebt");
+        } catch (RuntimeException ignored) {
+        }
+        if (customer.getDebtAmount().compareTo(BigDecimal.valueOf(maxDebtParam)) > 0) {
             throw new AppException(ErrorCode.DEBT_AMOUNT_LIMIT_EXCEEDED);
         }
         Invoices inputInvoice = invoiceMapper.toInvoice(request);
@@ -79,10 +86,12 @@ public class InvoiceService {
             booksInvoice.setInvoice(inputInvoice);
             booksInvoice.setQuantity(outputBook.getQuantity());
             booksInvoice.setSellPrice(book.getImportPrice().multiply(BigDecimal.valueOf(1.05)));
-            totalAmount = totalAmount.add(booksInvoice.getSellPrice().multiply(BigDecimal.valueOf(outputBook.getQuantity())));
+            totalAmount = totalAmount
+                    .add(booksInvoice.getSellPrice().multiply(BigDecimal.valueOf(outputBook.getQuantity())));
             bookDetails.add(booksInvoice);
             booksInvoice.setBook(book);
-            monthlyInventoryReportDetailService.createMonthlyInventoryReportDetail(book.getBookId(), outputBook.getQuantity(), "Export");
+            monthlyInventoryReportDetailService.createMonthlyInventoryReportDetail(book.getBookId(),
+                    outputBook.getQuantity(), "Export");
 
             book.setQuantity(book.getQuantity() - outputBook.getQuantity());
             bookRepository.save(book);
@@ -94,7 +103,8 @@ public class InvoiceService {
         inputInvoice.setBookDetails(bookDetails);
         monthlyDebtReportDetailService.createMonthlyDebtReportDetail(inputInvoice.getUserId(), totalAmount, "Debit");
         if (inputInvoice.getPaidAmount().compareTo(BigDecimal.ZERO) > 0) {
-            monthlyDebtReportDetailService.createMonthlyDebtReportDetail(inputInvoice.getUserId(), inputInvoice.getPaidAmount(), "Credit");
+            monthlyDebtReportDetailService.createMonthlyDebtReportDetail(inputInvoice.getUserId(),
+                    inputInvoice.getPaidAmount(), "Credit");
         }
         if (inputInvoice.getDebtAmount().compareTo(BigDecimal.ZERO) > 0) {
             customer.setDebtAmount(customer.getDebtAmount().add(inputInvoice.getDebtAmount()));
@@ -102,7 +112,6 @@ public class InvoiceService {
         }
         return invoiceMapper.toInvoiceResponse(invoiceRepository.save(inputInvoice));
     }
-
 
     public List<InvoiceResponse> getInvoices() {
         return invoiceRepository.findAll().stream().map(invoiceMapper::toInvoiceResponse).toList();
@@ -120,7 +129,8 @@ public class InvoiceService {
 
         List<BookDeleteRequest> newBooks = request.getBookDetails();
         Optional<Users> customerOpt = userRepository.findById(request.getUserId());
-        if (customerOpt.isEmpty()) throw new AppException(ErrorCode.USER_NOT_EXISTED);
+        if (customerOpt.isEmpty())
+            throw new AppException(ErrorCode.USER_NOT_EXISTED);
         Users customer = customerOpt.get();
         BigDecimal oldDebt = invoice.getDebtAmount() != null ? invoice.getDebtAmount() : BigDecimal.ZERO;
         Map<Integer, BooksInvoices> oldBookDetailMap = invoice.getBookDetails().stream()
@@ -203,8 +213,6 @@ public class InvoiceService {
         }
         return invoiceMapper.toInvoiceResponse(invoiceRepository.save(invoice));
     }
-
-
 
     public void deleteInvoice(Integer invoiceId) {
         Invoices invoice = invoiceRepository.findById(invoiceId).orElse(null);
