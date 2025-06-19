@@ -53,6 +53,8 @@ public class ImportReceiptService {
     UserRepository userRepository;
     @Autowired
     ParameterService parameterService;
+    @Autowired
+    MonthlyInventoryReportDetailService monthlyInventoryReportDetailService;
 
     @Transactional
     public ImportReceiptResponse createImportReceipt(ImportReceiptCreationRequest request) {
@@ -123,9 +125,12 @@ public class ImportReceiptService {
                 .orElseThrow(() -> new RuntimeException("Import receipt not found")));
     }
 
+    @Transactional
     public ImportReceiptResponse updateImportReceipt(Integer importRequestId, ImportReceiptUpdateRequest request) {
         ImportReceipts importReceipt = importReceiptRepository.findById(importRequestId)
                 .orElseThrow(() -> new AppException(ErrorCode.IMPORT_RECEIPT_NOT_EXISTED));
+
+        log.info("Updating import receipt {} - handling inventory report changes", importRequestId);
 
         List<BookUpdateRequest> inputBooks = request.getBookDetails();
         int totalQuantity = inputBooks.stream().mapToInt(BookUpdateRequest::getQuantity).sum();
@@ -151,19 +156,38 @@ public class ImportReceiptService {
             int oldQuantity = oldQuantityMap.getOrDefault(inputBookRequest.getBookId(), 0);
             int quantityDiff = newQuantity - oldQuantity;
 
-            // Update prices in the book entity itself
+            // Validate quantity changes won't cause negative stock
             Books bookToUpdate = bookRepository.findById(inputBookRequest.getBookId())
                     .orElseThrow(() -> new AppException(ErrorCode.BOOK_NOT_EXISTED));
+
+            if (quantityDiff < 0 && bookToUpdate.getQuantity() + quantityDiff < 0) {
+                log.error("Cannot update import receipt {} - book {} would have negative quantity ({} + {} = {})",
+                        importRequestId, inputBookRequest.getBookId(), bookToUpdate.getQuantity(), quantityDiff,
+                        bookToUpdate.getQuantity() + quantityDiff);
+                throw new AppException(ErrorCode.BOOK_QUANTITY_UNDER_LIMIT);
+            }
+
+            // Update prices in the book entity itself
             BigDecimal newImportPrice = inputBookRequest.getImportPrice();
             bookToUpdate.setImportPrice(newImportPrice);
             bookToUpdate.setSellPrice(newImportPrice.multiply(new BigDecimal("1.05")));
             bookRepository.save(bookToUpdate);
 
-            // Update quantity
-            int originalQuantity = inputBookRequest.getQuantity();
-            inputBookRequest.setQuantity(quantityDiff);
-            bookService.updateBook(inputBookRequest.getBookId(), inputBookRequest);
-            inputBookRequest.setQuantity(originalQuantity);
+            // Handle inventory report changes
+            if (quantityDiff != 0) {
+                log.info("Book {} quantity change: {} -> {} (diff: {})",
+                        inputBookRequest.getBookId(), oldQuantity, newQuantity, quantityDiff);
+
+                // Create inventory report detail for the difference
+                monthlyInventoryReportDetailService.createMonthlyInventoryReportDetail(
+                        inputBookRequest.getBookId(), quantityDiff, "Import");
+            }
+
+            // Update book quantity directly (avoid double inventory reporting)
+            if (quantityDiff != 0) {
+                bookToUpdate.setQuantity(bookToUpdate.getQuantity() + quantityDiff);
+                bookRepository.save(bookToUpdate);
+            }
 
             BooksImportReceipts booksImportReceipt = existingBookDetailsMap.get(inputBookRequest.getBookId());
 
@@ -171,6 +195,10 @@ public class ImportReceiptService {
                 booksImportReceipt.setQuantity(newQuantity);
                 booksImportReceipt.setImportPrice(newImportPrice);
             } else {
+                // New book added to receipt
+                log.info("Adding new book {} with quantity {} to import receipt",
+                        inputBookRequest.getBookId(), newQuantity);
+
                 booksImportReceipt = new BooksImportReceipts();
                 booksImportReceipt.setBook(bookToUpdate);
                 booksImportReceipt.setImportReceipt(importReceipt);
@@ -186,9 +214,33 @@ public class ImportReceiptService {
                 .filter(detail -> !processedBookIds.contains(detail.getBook().getBookId()))
                 .collect(Collectors.toSet());
 
+        // Validate that removing items won't cause negative quantities
         for (BooksImportReceipts itemToRemove : itemsToRemove) {
-            int quantityToSubtract = -itemToRemove.getQuantity(); // Số âm để trừ
-            bookService.updateBookQuantity(itemToRemove.getBook().getBookId(), quantityToSubtract);
+            Books book = itemToRemove.getBook();
+            int currentQuantity = book.getQuantity();
+            int quantityToRemove = itemToRemove.getQuantity();
+
+            if (currentQuantity < quantityToRemove) {
+                log.error(
+                        "Cannot update import receipt {} - removing book {} would cause negative quantity ({} - {} = {})",
+                        importRequestId, book.getBookId(), currentQuantity, quantityToRemove,
+                        currentQuantity - quantityToRemove);
+                throw new AppException(ErrorCode.BOOK_QUANTITY_UNDER_LIMIT);
+            }
+        }
+
+        for (BooksImportReceipts itemToRemove : itemsToRemove) {
+            log.info("Removing book {} with quantity {} from import receipt",
+                    itemToRemove.getBook().getBookId(), itemToRemove.getQuantity());
+
+            // Update book quantity directly
+            Books book = itemToRemove.getBook();
+            book.setQuantity(book.getQuantity() - itemToRemove.getQuantity());
+            bookRepository.save(book);
+
+            // Create negative inventory report detail for removed book
+            monthlyInventoryReportDetailService.createMonthlyInventoryReportDetail(
+                    itemToRemove.getBook().getBookId(), -itemToRemove.getQuantity(), "Import");
         }
         importReceipt.getBookDetails().removeIf(detail -> !processedBookIds.contains(detail.getBook().getBookId()));
         BigDecimal totalAmount = importReceipt.getBookDetails().stream()
@@ -198,14 +250,50 @@ public class ImportReceiptService {
         importReceipt.setTotalAmount(totalAmount);
 
         ImportReceipts savedImportReceipt = importReceiptRepository.save(importReceipt);
+        log.info("Successfully updated import receipt {} with inventory report changes", importRequestId);
 
         return importReceiptMapper.toImportReceiptResponse(savedImportReceipt);
     }
 
+    @Transactional
     public void deleteImportReceipt(Integer importReceiptId) {
         ImportReceipts importReceipt = importReceiptRepository.findById(importReceiptId).orElse(null);
         if (importReceipt != null) {
+            log.info("Deleting import receipt {} - reverting book quantities and inventory reports", importReceiptId);
+
+            // Validate that reverting won't cause negative quantities
+            for (BooksImportReceipts detail : importReceipt.getBookDetails()) {
+                Books book = detail.getBook();
+                int currentQuantity = book.getQuantity();
+                int quantityToRevert = detail.getQuantity();
+
+                if (currentQuantity < quantityToRevert) {
+                    log.error("Cannot delete import receipt {} - book {} would have negative quantity ({} - {} = {})",
+                            importReceiptId, book.getBookId(), currentQuantity, quantityToRevert,
+                            currentQuantity - quantityToRevert);
+                    throw new AppException(ErrorCode.BOOK_QUANTITY_UNDER_LIMIT);
+                }
+            }
+
+            // Revert book quantities and create negative inventory report details
+            for (BooksImportReceipts detail : importReceipt.getBookDetails()) {
+                Books book = detail.getBook();
+                int quantityToRevert = detail.getQuantity();
+
+                // Revert book quantity
+                book.setQuantity(book.getQuantity() - quantityToRevert);
+                bookRepository.save(book);
+
+                log.info("Reverted book {} quantity by {}, new quantity: {}",
+                        book.getBookId(), quantityToRevert, book.getQuantity());
+
+                // Create negative inventory report detail to offset the original import
+                monthlyInventoryReportDetailService.createMonthlyInventoryReportDetail(
+                        book.getBookId(), -quantityToRevert, "Import");
+            }
+
             importReceiptRepository.delete(importReceipt);
+            log.info("Successfully deleted import receipt {} and reverted all changes", importReceiptId);
         }
     }
 }

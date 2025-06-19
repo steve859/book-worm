@@ -65,4 +65,38 @@ public class MonthlyDebtReportDetailService {
                 monthlyDebtReportService.updateMonthlyDebtReport(monthlyDebtReportDetail, amount, type);
                 return monthlyDebtReportDetailMapper.toMonthlyDebtReportDetailResponse(monthlyDebtReportDetail);
         }
+
+        public MonthlyDebtReportDetailResponse reversePaymentDetail(String userId, BigDecimal amount) {
+                log.info("Creating payment reversal detail for user {} amount {}", userId, amount);
+
+                MonthlyDebtReportDetails monthlyDebtReportDetail = MonthlyDebtReportDetails.builder()
+                                .userId(userId)
+                                .amount(amount)
+                                .type("Credit_Reversal") // Different type to identify reversals
+                                .reportDate(LocalDate.now())
+                                .build();
+                MonthlyDebtReports monthlyDebtReport = monthlyDebtReportRepository
+                                .findByUserIdAndReportMonth(userId,
+                                                monthlyDebtReportDetail.getReportDate()
+                                                                .withDayOfMonth(monthlyDebtReportDetail.getReportDate()
+                                                                                .lengthOfMonth()))
+                                .orElse(null);
+                if (monthlyDebtReport == null) {
+                        monthlyDebtReportService.createMonthlyDebtReport(userId,
+                                        monthlyDebtReportDetail.getReportDate().withDayOfMonth(
+                                                        monthlyDebtReportDetail.getReportDate().lengthOfMonth()));
+                        monthlyDebtReport = monthlyDebtReportRepository
+                                        .findByUserIdAndReportMonth(userId, monthlyDebtReportDetail.getReportDate()
+                                                        .withDayOfMonth(monthlyDebtReportDetail.getReportDate()
+                                                                        .lengthOfMonth()))
+                                        .orElse(null);
+                }
+                monthlyDebtReportDetail.setDebtReport(monthlyDebtReport);
+                monthlyDebtReportDetailRepository.save(monthlyDebtReportDetail);
+
+                // Use the specific reversePayment method instead of generic
+                // updateMonthlyDebtReport
+                monthlyDebtReportService.reversePayment(monthlyDebtReportDetail, amount);
+                return monthlyDebtReportDetailMapper.toMonthlyDebtReportDetailResponse(monthlyDebtReportDetail);
+        }
 }

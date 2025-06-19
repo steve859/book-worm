@@ -100,4 +100,33 @@ public class MonthlyDebtReportService {
                                                 .orElseThrow(() -> new RuntimeException(
                                                                 "monthly debt report not found")));
         }
+
+        public MonthlyDebtReportResponse reversePayment(MonthlyDebtReportDetails monthlyDebtReportDetail,
+                        BigDecimal amount) {
+                log.info("Reversing payment for user {} amount {}",
+                                monthlyDebtReportDetail.getUserId(), amount);
+
+                MonthlyDebtReports monthlyDebtReport = monthlyDebtReportRepository
+                                .findByUserIdAndReportMonth(monthlyDebtReportDetail.getUserId(),
+                                                monthlyDebtReportDetail.getReportDate()
+                                                                .withDayOfMonth(monthlyDebtReportDetail.getReportDate()
+                                                                                .lengthOfMonth()))
+                                .orElseThrow(() -> new AppException(ErrorCode.MONTHLY_DEBT_REPORT_NOT_EXISTED));
+
+                // Reduce debtPayment by the amount
+                BigDecimal currentPayment = monthlyDebtReport.getDebtPayment();
+                BigDecimal newPayment = currentPayment.subtract(amount);
+                monthlyDebtReport.setDebtPayment(newPayment);
+
+                log.info("Payment reversal: {} -> {}", currentPayment, newPayment);
+
+                List<MonthlyDebtReportDetails> details = monthlyDebtReport.getDetails();
+                details.add(monthlyDebtReportDetail);
+                monthlyDebtReport.setDetails(details);
+                monthlyDebtReport.setClosingDebt(
+                                monthlyDebtReport.getOpeningDebt().add(monthlyDebtReport.getDebtIncrease())
+                                                .subtract(monthlyDebtReport.getDebtPayment()));
+                return monthlyDebtReportMapper
+                                .toMonthlyDebtReportResponse(monthlyDebtReportRepository.save(monthlyDebtReport));
+        }
 }
