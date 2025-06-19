@@ -34,9 +34,9 @@ const filteredItems = computed(() =>
 const dialog = ref(false)
 
 const onRowClick = (bookRow) => {
-  const selected = fullBookDetails.value[bookRow.id];
-  console.log('Selected book:', selected);
-  emit('select-book', selected);
+  // Emit the book object from the row directly.
+  // This object contains all necessary info including 'import_price'.
+  emit('select-book', bookRow);
 }
 
 const headers = [

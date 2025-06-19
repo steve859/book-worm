@@ -19,10 +19,11 @@ import java.util.List;
 public class MonthlyDebtReportResponse {
     Integer debtReportId;
     String userId;
+    String userName;
     BigDecimal openingDebt;
     BigDecimal debtIncrease;
-    BigDecimal debtPayment;
+    BigDecimal paidAmount;
     BigDecimal closingDebt;
     LocalDate reportMonth;
-//    List<MonthlyDebtReportDetails> details;
+    // List<MonthlyDebtReportDetails> details;
 }

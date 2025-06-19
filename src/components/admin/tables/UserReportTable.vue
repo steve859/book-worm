@@ -1,31 +1,68 @@
 <script setup>
-import { ref } from 'vue'
-import { useUser } from '@/data/user'
+import { ref, watch } from 'vue'
+import axios from '@/plugins/axios'
 
-const userStore = useUser()
-const { users } = userStore
+const props = defineProps({
+  month: {
+    type: Object,
+    required: true,
+  }
+})
 
+const reports = ref([])
+const loading = ref(false)
 
 const headers = [
-  { title: 'Name', key: 'name' },
-  { title: 'Opening Debt', key: 'opening_debt' },
-  { title: 'Debt Increase', key: 'debt_increase' },
-  { title: 'Debt Payment', key: 'deb_payment' },
-  { title: 'Closing Debt', key: 'closing_debt' },
+  { title: 'Customer ID', key: 'userId' },
+  { title: 'Customer Name', key: 'userName' },
+  { title: 'Opening Debt', key: 'openingDebt' },
+  { title: 'Debt Increase', key: 'debtIncrease' },
+  { title: 'Total Paid', key: 'paidAmount' },
+  { title: 'Closing Debt', key: 'closingDebt' },
 ]
 
+async function fetchReportByMonth(monthDate) {
+  if (!monthDate) return
+
+  const year = monthDate.getFullYear()
+  const month = monthDate.getMonth() + 1
+
+  console.log(`[UserReport] Fetching for year: ${year}, month: ${month}`)
+
+  loading.value = true
+  try {
+    const { data } = await axios.get('/monthlyDebtReports', {
+      params: { year, month }
+    })
+    reports.value = data.result || []
+  } catch (e) {
+    console.error('[UserReport] Load failed:', e)
+    reports.value = [] // Clear data on error
+  } finally {
+    loading.value = false
+  }
+}
+
+// Automatically fetch data when the month prop changes
+watch(() => props.month, fetchReportByMonth, { immediate: true })
 </script>
 
 <template>
   <v-container fluid>
+    <div v-if="loading">Loading...</div>
     <v-data-table
+      v-else
       :headers="headers"
-      :items="users"
+      :items="reports"
       class="elevation-1"
       item-value="id"
       :items-per-page="-1"
       hide-default-footer
     >
+      <template #item.openingDebt="{ item }">{{ item.openingDebt?.toLocaleString() }}</template>
+      <template #item.debtIncrease="{ item }">{{ item.debtIncrease?.toLocaleString() }}</template>
+      <template #item.paidAmount="{ item }">{{ item.paidAmount?.toLocaleString() }}</template>
+      <template #item.closingDebt="{ item }">{{ item.closingDebt?.toLocaleString() }}</template>
     </v-data-table>
   </v-container>
 </template>

@@ -30,6 +30,8 @@ const dialogMessage = ref('')
 
 const handleSelectBook = (book) => {
   selectedBook.value = book;
+  // Automatically bind the import price from the selected book
+  importPrice.value = book.import_price || '';
 };
 
 const quantity = ref('')
@@ -105,9 +107,19 @@ function deleteBookInReceipt(book) {
 }
 
 async function handleSave() {
-  // Validate before saving
+  // Validate before saving: Check for empty receipt
   if (!props.importReceipt.books || props.importReceipt.books.length === 0) {
     showValidationDialog('Empty Receipt', 'Please add at least one book to the receipt before saving.')
+    return;
+  }
+
+  // Frontend validation for total import quantity
+  const totalQuantity = props.importReceipt.books.reduce((sum, book) => sum + book.quantity, 0);
+  if (regulations.value.minImportQuantity && totalQuantity < regulations.value.minImportQuantity) {
+    showValidationDialog(
+      'Total Quantity Too Low',
+      `The total quantity of all books in this receipt is <strong>${totalQuantity}</strong>, which is below the minimum requirement of <strong>${regulations.value.minImportQuantity}</strong> books.`
+    );
     return;
   }
 
