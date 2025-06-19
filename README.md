@@ -90,7 +90,7 @@ Hệ thống quản lý cửa hàng sách được xây dựng với Spring Boot
 ## Cấu trúc Project
 
 ```
-BookStore3/
+book-worm/
 ├── backend/                 # Spring Boot API
 │   ├── src/
 │   ├── pom.xml
