@@ -1,719 +1,426 @@
 -- cd backend --
 -- ./mvnw spring-boot:run --
 -- ============================================================================
--- 1. PERMISSIONS (13 permissions)
 -- ============================================================================
+-- INSERTING SAMPLE DATA FOR BOOKWORM APPLICATION
+-- ============================================================================
+
+-- 1. Parameters
 INSERT INTO
-    permissions (
-        permission_name,
-        permission_description
+    `parameters` (`param_name`, `param_value`)
+VALUES ('minImportQuantity', 150),
+    ('maxStockQuantity', 300),
+    ('minStockBeforeImport', 20),
+    ('minInvoiceAmount', 20000),
+    ('customersCanHaveDebt', 1),
+    ('maxDebtAmount', 20000.0),
+    ('sell_price_ratio', 1.05);
+
+-- 2. Roles
+INSERT INTO
+    `roles` (
+        `role_name`,
+        `role_description`
     )
 VALUES (
-        'READ_USERS',
-        'Permission to read user information'
+        'SUPER_ADMIN',
+        'Quản trị viên cấp cao nhất'
     ),
-    (
-        'WRITE_USERS',
-        'Permission to create and update users'
-    ),
-    (
-        'DELETE_USERS',
-        'Permission to delete users'
-    ),
-    (
-        'READ_BOOKS',
-        'Permission to view books'
-    ),
-    (
-        'WRITE_BOOKS',
-        'Permission to add and update books'
-    ),
-    (
-        'DELETE_BOOKS',
-        'Permission to delete books'
-    ),
-    (
-        'READ_AUTHORS',
-        'Permission to view authors'
-    ),
-    (
-        'WRITE_AUTHORS',
-        'Permission to add and update authors'
-    ),
-    (
-        'DELETE_AUTHORS',
-        'Permission to delete authors'
-    ),
-    (
-        'READ_CATEGORIES',
-        'Permission to view categories'
-    ),
-    (
-        'WRITE_CATEGORIES',
-        'Permission to add and update categories'
-    ),
-    (
-        'DELETE_CATEGORIES',
-        'Permission to delete categories'
-    ),
-    (
-        'MANAGE_INVENTORY',
-        'Permission to manage inventory operations'
-    );
+    ('ADMIN', 'Nhân viên quản lý'),
+    ('USER', 'Khách hàng');
 
--- ============================================================================
--- 2. ROLES (2 roles)
--- ============================================================================
---  INSERT INTO
---     roles (role_name, role_description)
--- VALUES (
---         'ADMIN',
---         'Administrator with full access'
---     ),
---     (
---         'USER',
---         'Regular user with limited access'
---     );
-
--- ============================================================================
--- 3. ROLES_PERMISSIONS (Many-to-Many relationship)
--- ============================================================================
--- Admin gets all permissions
+-- 3. Users (Password for all is "123456" hashed with BCrypt)
 INSERT INTO
-    roles_permissions (
-        roles_role_name,
-        permissions_permission_name
+    `users` (
+        `user_id`,
+        `username`,
+        `password`,
+        `first_name`,
+        `last_name`,
+        `email`,
+        `phone`,
+        `dob`,
+        `debt_amount_user`
     )
-VALUES ('ADMIN', 'READ_USERS'),
-    ('ADMIN', 'WRITE_USERS'),
-    ('ADMIN', 'DELETE_USERS'),
-    ('ADMIN', 'READ_BOOKS'),
-    ('ADMIN', 'WRITE_BOOKS'),
-    ('ADMIN', 'DELETE_BOOKS'),
-    ('ADMIN', 'READ_AUTHORS'),
-    ('ADMIN', 'WRITE_AUTHORS'),
-    ('ADMIN', 'DELETE_AUTHORS'),
-    ('ADMIN', 'READ_CATEGORIES'),
-    ('ADMIN', 'WRITE_CATEGORIES'),
-    ('ADMIN', 'DELETE_CATEGORIES'),
-    ('ADMIN', 'MANAGE_INVENTORY');
-
--- User gets read permissions only
-INSERT INTO
-    roles_permissions (
-        roles_role_name,
-        permissions_permission_name
-    )
-VALUES ('USER', 'READ_BOOKS'),
-    ('USER', 'READ_AUTHORS'),
-    ('USER', 'READ_CATEGORIES');
-
--- ============================================================================
--- 4. USERS (10 users with meaningful IDs)
--- ============================================================================
-INSERT INTO
-    users (
-        user_id,
-        username,
-        password,
-        first_name,
-        last_name,
-        email,
-        phone,
-        dob,
-        debt_amount_user
-    )
-VALUES
-    -- Admin user (ID: admin-000)
-    (
-        'admin-000',
-        'admin123',
-        '$2a$10$mfMZmgDH5qBqvwSTRLGQaeMZRWvvRrAzaAEy35uUgPG3JCtHmWzLm',
-        'System',
-        'Administrator',
-        'admin@bookstore.com',
-        '0901234567',
+VALUES (
+        'admin001',
+        'superadmin',
+        '$2a$10$N0Iasv5g33zns.OUo23zHuYAlf8lOKxIZEGtc3i2.nPaC23gA8wR6',
+        'Super',
+        'Admin',
+        'super.admin@bookworm.com',
+        '0123456780',
         '1990-01-01',
         0.00
     ),
-    --     -- Admin user (ID: admin-001)
-    --     (
-    --         'admin',
-    --         'admin',
-    --         '$10$H9LSTLTInv9Ydetf6Wjf1.hInmxD2m57exCLcoL48aonpdV5qJ8sq',
-    --         'System',
-    --         'Administrator2',
-    --         'admin2@bookstore.com',
-    --         '0901222567',
-    --         '1990-01-02',
-    --         0.00
-    --     ),
-    -- Regular users (ID: user-001 to user-009)
     (
-        'user-001',
-        'john_doe',
-        '$2a$10$mfMZmgDH5qBqvwSTRLGQaeMZRWvvRrAzaAEy35uUgPG3JCtHmWzLm',
-        'John',
-        'Doe',
-        'john.doe@email.com',
-        '0901234568',
-        '1985-03-15',
-        150000.00
-    ),
-    (
-        'user-002',
-        'jane_smith',
-        '$2a$10$mfMZmgDH5qBqvwSTRLGQaeMZRWvvRrAzaAEy35uUgPG3JCtHmWzLm',
-        'Jane',
-        'Smith',
-        'jane.smith@email.com',
-        '0901234569',
-        '1992-07-22',
-        75000.00
-    ),
-    (
-        'user-003',
-        'mike_johnson',
-        '$2a$10$mfMZmgDH5qBqvwSTRLGQaeMZRWvvRrAzaAEy35uUgPG3JCtHmWzLm',
-        'Mike',
-        'Johnson',
-        'mike.johnson@email.com',
-        '0901234570',
-        '1988-11-10',
+        'admin002',
+        'admin',
+        '$2a$10$N0Iasv5g33zns.OUo23zHuYAlf8lOKxIZEGtc3i2.nPaC23gA8wR6',
+        'Staff',
+        'Member',
+        'admin.staff@bookworm.com',
+        '0123456781',
+        '1995-05-10',
         0.00
     ),
     (
-        'user-004',
-        'sarah_wilson',
-        '$2a$10$mfMZmgDH5qBqvwSTRLGQaeMZRWvvRrAzaAEy35uUgPG3JCtHmWzLm',
-        'Sarah',
-        'Wilson',
-        'sarah.wilson@email.com',
-        '0901234571',
-        '1995-04-18',
-        200000.00
-    ),
-    (
-        'user-005',
-        'david_brown',
-        '$2a$10$mfMZmgDH5qBqvwSTRLGQaeMZRWvvRrAzaAEy35uUgPG3JCtHmWzLm',
-        'David',
-        'Brown',
-        'david.brown@email.com',
-        '0901234572',
-        '1987-09-03',
-        50000.00
-    ),
-    (
-        'user-006',
-        'emily_davis',
-        '$2a$10$mfMZmgDH5qBqvwSTRLGQaeMZRWvvRrAzaAEy35uUgPG3JCtHmWzLm',
-        'Emily',
-        'Davis',
-        'emily.davis@email.com',
-        '0901234573',
-        '1993-12-25',
+        'user001',
+        'khachhang1',
+        '$2a$10$N0Iasv5g33zns.OUo23zHuYAlf8lOKxIZEGtc3i2.nPaC23gA8wR6',
+        'An',
+        'Nguyễn Văn',
+        'khach.hang1@email.com',
+        '0987654321',
+        '2000-10-20',
         0.00
     ),
     (
-        'user-007',
-        'alex_garcia',
-        '$2a$10$mfMZmgDH5qBqvwSTRLGQaeMZRWvvRrAzaAEy35uUgPG3JCtHmWzLm',
-        'Alex',
-        'Garcia',
-        'alex.garcia@email.com',
-        '0901234574',
-        '1991-06-14',
-        100000.00
-    ),
-    (
-        'user-008',
-        'lisa_martinez',
-        '$2a$10$mfMZmgDH5qBqvwSTRLGQaeMZRWvvRrAzaAEy35uUgPG3JCtHmWzLm',
-        'Lisa',
-        'Martinez',
-        'lisa.martinez@email.com',
-        '0901234575',
-        '1989-08-07',
-        25000.00
-    ),
-    (
-        'user-009',
-        'chris_lee',
-        '$2a$10$mfMZmgDH5qBqvwSTRLGQaeMZRWvvRrAzaAEy35uUgPG3JCtHmWzLm',
-        'Chris',
-        'Lee',
-        'chris.lee@email.com',
-        '0901234576',
-        '1994-02-28',
-        175000.00
+        'user002',
+        'khachhang2',
+        '$2a$10$N0Iasv5g33zns.OUo23zHuYAlf8lOKxIZEGtc3i2.nPaC23gA8wR6',
+        'Bình',
+        'Trần Thị',
+        'khach.hang2@email.com',
+        '0987654322',
+        '1998-12-15',
+        0.00
     );
 
--- ============================================================================
--- 5. USERS_ROLES (Many-to-Many relationship)
--- ============================================================================
+-- 4. User-Role Link
 INSERT INTO
-    users_roles (
-        users_user_id,
-        roles_role_name
+    `users_roles` (
+        `users_user_id`,
+        `roles_role_name`
     )
-VALUES ('admin-000', 'ADMIN'),
-    ('user-001', 'USER'),
-    ('user-002', 'USER'),
-    ('user-003', 'USER'),
-    ('user-004', 'USER'),
-    ('user-005', 'USER'),
-    ('user-006', 'USER'),
-    ('user-007', 'USER'),
-    ('user-008', 'USER'),
-    ('user-009', 'USER');
+VALUES ('admin001', 'SUPER_ADMIN'),
+    ('admin001', 'ADMIN'),
+    ('admin002', 'ADMIN'),
+    ('user001', 'USER'),
+    ('user002', 'USER');
 
--- ============================================================================
--- 6. AUTHORS (15 authors - auto increment)
--- ============================================================================
+-- 5. Authors
 INSERT INTO
-    authors (author_name)
-VALUES ('Nguyễn Nhật Ánh'),
-    ('Tô Hoài'),
-    ('Nam Cao'),
-    ('Nguyễn Du'),
-    ('Hồ Chí Minh'),
-    ('Xuân Diệu'),
-    ('Nguyễn Tuân'),
-    ('Vũ Trọng Phụng'),
-    ('Ngô Tất Tố'),
-    ('Kim Lân'),
-    ('J.K. Rowling'),
-    ('George Orwell'),
-    ('Harper Lee'),
-    ('Jane Austen'),
-    ('Mark Twain');
+    `authors` (`author_id`, `author_name`)
+VALUES (1, 'Tô Hoài'),
+    (2, 'Nam Cao'),
+    (3, 'Nguyễn Du'),
+    (4, 'Hồ Chí Minh'),
+    (5, 'Xuân Diệu'),
+    (6, 'Nguyễn Nhật Ánh'),
+    (7, 'J.K. Rowling');
 
--- ============================================================================
--- 7. CATEGORIES (12 categories - auto increment)
--- ============================================================================
+-- 6. Categories
 INSERT INTO
-    categories (category_name)
-VALUES ('Văn học Việt Nam'),
-    ('Tiểu thuyết'),
-    ('Truyện ngắn'),
-    ('Thơ ca'),
-    ('Sách thiếu nhi'),
-    ('Khoa học viễn tưởng'),
-    ('Trinh thám'),
-    ('Lịch sử'),
-    ('Tâm lý học'),
-    ('Kinh tế'),
-    ('Công nghệ'),
-    ('Ngoại ngữ');
+    `categories` (
+        `category_id`,
+        `category_name`
+    )
+VALUES (1, 'Văn học Việt Nam'),
+    (2, 'Sách thiếu nhi'),
+    (3, 'Truyện ngắn'),
+    (4, 'Thơ ca'),
+    (5, 'Lịch sử'),
+    (6, 'Tiểu thuyết'),
+    (7, 'Fantasy');
 
--- ============================================================================
--- 8. BOOKS (15 books - auto increment)
--- ============================================================================
+-- 7. Books (Initial state before any transactions)
 INSERT INTO
-    books (
-        book_name,
-        published_year,
-        import_price,
-        quantity
+    `books` (
+        `book_id`,
+        `book_name`,
+        `published_year`,
+        `import_price`,
+        `sell_price`,
+        `quantity`
     )
 VALUES (
+        1,
         'Dế Mèn phiêu lưu ký',
         1941,
-        45000.00,
-        50
+        0,
+        0,
+        0
     ),
-    ('Tắt đèn', 1939, 55000.00, 30),
+    (2, 'Tắt đèn', 1939, 0, 0, 0),
     (
+        3,
         'Truyện Kiều',
         1820,
-        80000.00,
-        25
+        0,
+        0,
+        0
     ),
     (
+        4,
         'Nhật ký trong tù',
         1960,
-        65000.00,
-        40
+        0,
+        0,
+        0
     ),
     (
+        5,
         'Thơ Xuân Diệu',
         1938,
-        70000.00,
-        35
+        0,
+        0,
+        0
     ),
     (
+        6,
         'Vang bóng một thời',
-        1980,
-        60000.00,
-        45
+        1940,
+        0,
+        0,
+        0
     ),
-    ('Số đỏ', 1936, 75000.00, 20),
     (
-        'Tắt đèn (Tái bản)',
-        1939,
-        55000.00,
-        25
+        7,
+        'Kính vạn hoa',
+        1995,
+        0,
+        0,
+        0
     ),
-    ('Làng', 1943, 50000.00, 30),
-    ('Vợ nhặt', 1954, 40000.00, 35),
     (
-        'Harry Potter và Hòn đá Phù thủy',
+        8,
+        'Harry Potter and the Sorcerer''s Stone',
         1997,
-        120000.00,
-        100
-    ),
-    ('1984', 1949, 85000.00, 60),
-    (
-        'Giết con chim nhại',
-        1960,
-        90000.00,
-        40
-    ),
-    (
-        'Kiêu hãnh và Định kiến',
-        1813,
-        95000.00,
-        35
-    ),
-    (
-        'Cuộc phiêu lưu của Tom Sawyer',
-        1876,
-        70000.00,
-        45
+        0,
+        0,
+        0
     );
 
--- ============================================================================
--- 9. AUTHORS_BOOKS (Many-to-Many relationship)
--- ============================================================================
+-- 8. Link Books to Authors & Categories
 INSERT INTO
-    authors_books (author_id, book_id)
-VALUES
-    -- Vietnamese Literature
-    (2, 1), -- Tô Hoài - Dế Mèn phiêu lưu ký
-    (3, 2), -- Nam Cao - Tắt đèn
-    (4, 3), -- Nguyễn Du - Truyện Kiều
-    (5, 4), -- Hồ Chí Minh - Nhật ký trong tù
-    (6, 5), -- Xuân Diệu - Thơ Xuân Diệu
-    (1, 6), -- Nguyễn Nhật Ánh - Vang bóng một thời
-    (8, 7), -- Vũ Trọng Phụng - Số đỏ
-    (3, 8), -- Nam Cao - Tắt đèn (Tái bản)
-    (9, 9), -- Ngô Tất Tố - Làng
-    (10, 10), -- Kim Lân - Vợ nhặt
-    -- International Literature
-    (11, 11), -- J.K. Rowling - Harry Potter
-    (12, 12), -- George Orwell - 1984
-    (13, 13), -- Harper Lee - Giết con chim nhại
-    (14, 14), -- Jane Austen - Kiêu hãnh và Định kiến
-    (15, 15);
--- Mark Twain - Tom Sawyer
+    `authors_books` (`book_id`, `author_id`)
+VALUES (1, 1),
+    (2, 2),
+    (3, 3),
+    (4, 4),
+    (5, 5),
+    (6, 2),
+    (7, 6),
+    (8, 7);
 
--- ============================================================================
--- 10. BOOKS_CATEGORIES (Many-to-Many relationship)
--- ============================================================================
 INSERT INTO
-    books_categories (book_id, category_id)
-VALUES
-    -- Vietnamese Literature + specific categories
-    (1, 1),
-    (1, 5), -- Dế Mèn - Văn học VN + Sách thiếu nhi
+    `books_categories` (`book_id`, `category_id`)
+VALUES (1, 1),
+    (1, 2),
     (2, 1),
-    (2, 3), -- Tắt đèn - Văn học VN + Truyện ngắn
+    (2, 3),
+    (2, 6),
     (3, 1),
-    (3, 4), -- Truyện Kiều - Văn học VN + Thơ ca
-    (4, 1),
-    (4, 8), -- Nhật ký trong tù - Văn học VN + Lịch sử
+    (3, 4),
+    (4, 5),
+    (4, 4),
     (5, 1),
-    (5, 4), -- Thơ Xuân Diệu - Văn học VN + Thơ ca
+    (5, 4),
     (6, 1),
-    (6, 2), -- Vang bóng một thời - Văn học VN + Tiểu thuyết
-    (7, 1),
-    (7, 2), -- Số đỏ - Văn học VN + Tiểu thuyết
-    (8, 1),
-    (8, 3), -- Tắt đèn (Tái bản) - Văn học VN + Truyện ngắn
-    (9, 1),
-    (9, 2), -- Làng - Văn học VN + Tiểu thuyết
-    (10, 1),
-    (10, 3), -- Vợ nhặt - Văn học VN + Truyện ngắn
-    -- International Literature
-    (11, 2),
-    (11, 6), -- Harry Potter - Tiểu thuyết + Khoa học viễn tưởng
-    (12, 2),
-    (12, 6), -- 1984 - Tiểu thuyết + Khoa học viễn tưởng
-    (13, 2),
-    (13, 9), -- Giết con chim nhại - Tiểu thuyết + Tâm lý học
-    (14, 2),
-    (14, 9), -- Kiêu hãnh và Định kiến - Tiểu thuyết + Tâm lý học
-    (15, 2),
-    (15, 5);
--- Tom Sawyer - Tiểu thuyết + Sách thiếu nhi
+    (6, 3),
+    (7, 2),
+    (7, 6),
+    (8, 7);
 
--- ============================================================================
--- 11. PARAMETERS (5 system parameters)
--- ============================================================================
+-- 9. Import Receipt 1: Importing 150 'De Men' and 100 'Tat Den'
 INSERT INTO
-    parameters (param_name, param_value)
-VALUES ('MIN_INVENTORY_STOCK', 10.0),
-    ('MAX_DEBT_AMOUNT', 500000.0),
-    (
-        'DEFAULT_MARKUP_PERCENTAGE',
-        30.0
-    ),
-    ('MAX_BOOKS_PER_INVOICE', 20.0),
-    ('MONTHLY_REPORT_DAY', 1.0);
-
--- ============================================================================
--- 12. IMPORT_RECEIPTS (5 import receipts - auto increment)
--- ============================================================================
-INSERT INTO
-    import_receipts (
-        admin_id,
-        import_date,
-        total_amount
+    `import_receipts` (
+        `import_receipt_id`,
+        `admin_id`,
+        `import_date`,
+        `total_amount`
     )
 VALUES (
-        'admin-000',
-        '2024-01-15',
-        2500000.00
-    ),
-    (
-        'admin-000',
-        '2024-02-20',
-        3200000.00
-    ),
-    (
-        'admin-000',
-        '2024-03-10',
-        1800000.00
-    ),
-    (
-        'admin-000',
-        '2024-04-05',
-        2900000.00
-    ),
-    (
-        'admin-001',
-        '2024-05-12',
-        2200000.00
+        1,
+        'admin002',
+        '2025-05-10',
+        17000000.00
     );
 
--- ============================================================================
--- 13. BOOKS_IMPORT_RECEIPTS (Junction table with additional data)
--- ============================================================================
 INSERT INTO
-    books_import_receipts (
-        book_id,
-        import_receipt_id,
-        quantity,
-        import_price
+    `books_import_receipts` (
+        `id`,
+        `book_id`,
+        `import_receipt_id`,
+        `quantity`,
+        `import_price`
     )
-VALUES
-    -- Import Receipt 1 (January)
-    (1, 1, 20, 45000.00),
-    (2, 1, 15, 55000.00),
-    (3, 1, 10, 80000.00),
-    (11, 1, 25, 120000.00),
-    -- Import Receipt 2 (February)
-    (4, 2, 20, 65000.00),
-    (5, 2, 18, 70000.00),
-    (12, 2, 30, 85000.00),
-    (13, 2, 20, 90000.00),
-    -- Import Receipt 3 (March)
-    (6, 3, 25, 60000.00),
-    (7, 3, 10, 75000.00),
-    (14, 3, 15, 95000.00),
-    -- Import Receipt 4 (April)
-    (8, 4, 15, 55000.00),
-    (9, 4, 20, 50000.00),
-    (10, 4, 25, 40000.00),
-    (15, 4, 30, 70000.00),
-    -- Import Receipt 5 (May)
-    (1, 5, 30, 45000.00),
-    (11, 5, 50, 120000.00);
+VALUES (1, 1, 1, 150, 70000.00),
+    (2, 2, 1, 100, 65000.00);
 
--- ============================================================================
--- 14. INVOICES (7 invoices - auto increment)
--- ============================================================================
+-- Update books stock and prices after import 1
+UPDATE `books`
+SET
+    `quantity` = 150,
+    `import_price` = 70000.00,
+    `sell_price` = 73500.00
+WHERE
+    `book_id` = 1;
+
+UPDATE `books`
+SET
+    `quantity` = 100,
+    `import_price` = 65000.00,
+    `sell_price` = 68250.00
+WHERE
+    `book_id` = 2;
+
+-- 10. Import Receipt 2
 INSERT INTO
-    invoices (
-        user_id,
-        admin_id,
-        create_at,
-        total_amount,
-        paid_amount,
-        debt_amount
+    `import_receipts` (
+        `import_receipt_id`,
+        `admin_id`,
+        `import_date`,
+        `total_amount`
     )
 VALUES (
-        'user-001',
-        'admin-001',
-        '2024-01-20',
-        250000.00,
-        100000.00,
-        150000.00
-    ),
-    (
-        'user-002',
-        'admin-001',
-        '2024-02-15',
-        180000.00,
-        105000.00,
-        75000.00
-    ),
-    (
-        'user-003',
-        'admin-001',
-        '2024-02-28',
-        320000.00,
-        320000.00,
+        2,
+        'admin002',
+        '2025-05-20',
+        29250000.00
+    );
+
+INSERT INTO
+    `books_import_receipts` (
+        `id`,
+        `book_id`,
+        `import_receipt_id`,
+        `quantity`,
+        `import_price`
+    )
+VALUES (3, 3, 2, 50, 90000.00),
+    (4, 7, 2, 100, 120000.00),
+    (5, 8, 2, 75, 170000.00);
+
+-- Update books stock and prices after import 2
+UPDATE `books`
+SET
+    `quantity` = 50,
+    `import_price` = 90000.00,
+    `sell_price` = 94500.00
+WHERE
+    `book_id` = 3;
+
+UPDATE `books`
+SET
+    `quantity` = 100,
+    `import_price` = 120000.00,
+    `sell_price` = 126000.00
+WHERE
+    `book_id` = 7;
+
+UPDATE `books`
+SET
+    `quantity` = 75,
+    `import_price` = 170000.00,
+    `sell_price` = 178500.00
+WHERE
+    `book_id` = 8;
+
+-- 11. Invoice 1 (User 1 buys books, incurs debt)
+-- Total = (10 * 73500) + (5 * 68250) = 735000 + 341250 = 1076250
+-- Paid = 1000000, Debt = 76250
+INSERT INTO
+    `invoices` (
+        `invoice_id`,
+        `user_id`,
+        `admin_id`,
+        `create_at`,
+        `total_amount`,
+        `paid_amount`,
+        `debt_amount`
+    )
+VALUES (
+        1,
+        'user001',
+        'admin002',
+        '2025-06-01',
+        1076250.00,
+        1000000.00,
+        76250.00
+    );
+
+INSERT INTO
+    `books_invoices` (
+        `id`,
+        `invoice_id`,
+        `book_id`,
+        `quantity`,
+        `sell_price`
+    )
+VALUES (1, 1, 1, 10, 73500.00),
+    (2, 1, 2, 5, 68250.00);
+
+-- Update stock and user debt after invoice 1
+UPDATE `books` SET `quantity` = `quantity` - 10 WHERE `book_id` = 1;
+
+UPDATE `books` SET `quantity` = `quantity` - 5 WHERE `book_id` = 2;
+
+UPDATE `users`
+SET
+    `debt_amount_user` = 76250.00
+WHERE
+    `user_id` = 'user001';
+
+-- 12. Invoice 2 (User 2 buys books, no debt)
+-- Total = (2 * 94500) + (1 * 178500) = 189000 + 178500 = 367500
+INSERT INTO
+    `invoices` (
+        `invoice_id`,
+        `user_id`,
+        `admin_id`,
+        `create_at`,
+        `total_amount`,
+        `paid_amount`,
+        `debt_amount`
+    )
+VALUES (
+        2,
+        'user002',
+        'admin002',
+        '2025-06-05',
+        367500.00,
+        367500.00,
         0.00
-    ),
-    (
-        'user-004',
-        'admin-001',
-        '2024-03-12',
-        450000.00,
-        250000.00,
-        200000.00
-    ),
-    (
-        'user-005',
-        'admin-001',
-        '2024-03-25',
-        95000.00,
-        45000.00,
-        50000.00
-    ),
-    (
-        'user-007',
-        'admin-001',
-        '2024-04-08',
-        275000.00,
-        175000.00,
-        100000.00
-    ),
-    (
-        'user-009',
-        'admin-001',
-        '2024-04-22',
-        390000.00,
-        215000.00,
-        175000.00
     );
 
--- ============================================================================
--- 15. BOOKS_INVOICES (Junction table with additional data)
--- ============================================================================
 INSERT INTO
-    books_invoices (
-        invoice_id,
-        book_id,
-        quantity,
-        sell_price
+    `books_invoices` (
+        `id`,
+        `invoice_id`,
+        `book_id`,
+        `quantity`,
+        `sell_price`
     )
-VALUES
-    -- Invoice 1 (user-001)
-    (1, 1, 2, 58500.00), -- Dế Mèn (45000 * 1.3)
-    (1, 11, 1, 156000.00), -- Harry Potter (120000 * 1.3)
-    -- Invoice 2 (user-002)
-    (2, 2, 1, 71500.00), -- Tắt đèn
-    (2, 5, 1, 91000.00), -- Thơ Xuân Diệu
-    -- Invoice 3 (user-003)
-    (3, 12, 2, 110500.00), -- 1984 (2 books)
-    (3, 6, 1, 78000.00), -- Vang bóng một thời
-    -- Invoice 4 (user-004)
-    (4, 3, 1, 104000.00), -- Truyện Kiều
-    (4, 13, 2, 117000.00), -- Giết con chim nhại (2 books)
-    (4, 15, 1, 91000.00), -- Tom Sawyer
-    -- Invoice 5 (user-005)
-    (5, 10, 2, 52000.00), -- Vợ nhặt (2 books)
-    -- Invoice 6 (user-007)
-    (6, 4, 1, 84500.00), -- Nhật ký trong tù
-    (6, 14, 1, 123500.00), -- Kiêu hãnh và Định kiến
-    (6, 9, 1, 65000.00), -- Làng
-    -- Invoice 7 (user-009)
-    (7, 7, 1, 97500.00), -- Số đỏ
-    (7, 8, 2, 71500.00), -- Tắt đèn (Tái bản) (2 books)
-    (7, 11, 1, 156000.00);
--- Harry Potter
+VALUES (3, 2, 3, 2, 94500.00),
+    (4, 2, 8, 1, 178500.00);
 
--- ============================================================================
--- 16. PAYMENT_RECEIPTS (5 payment receipts - auto increment)
--- ============================================================================
+-- Update stock after invoice 2
+UPDATE `books` SET `quantity` = `quantity` - 2 WHERE `book_id` = 3;
+
+UPDATE `books` SET `quantity` = `quantity` - 1 WHERE `book_id` = 8;
+
+-- 13. Payment Receipt (User 1 pays off some debt)
 INSERT INTO
-    payment_receipts (
-        payer_id,
-        admin_id,
-        total_amount,
-        create_at
+    `payment_receipts` (
+        `payment_receipt_id`,
+        `payer_id`,
+        `admin_id`,
+        `create_at`,
+        `total_amount`
     )
 VALUES (
-        'user-001',
-        'admin-001',
-        50000.00,
-        '2024-01-25'
-    ),
-    (
-        'user-002',
-        'admin-001',
-        25000.00,
-        '2024-02-20'
-    ),
-    (
-        'user-004',
-        'admin-001',
-        100000.00,
-        '2024-03-15'
-    ),
-    (
-        'user-007',
-        'admin-001',
-        75000.00,
-        '2024-04-10'
-    ),
-    (
-        'user-009',
-        'admin-001',
-        125000.00,
-        '2024-04-25'
+        1,
+        'user001',
+        'admin001',
+        '2025-06-15',
+        50000.00
     );
 
--- ============================================================================
--- 17. PAYMENT_RECEIPTS_INVOICES (Junction table with composite key)
--- ============================================================================
-INSERT INTO
-    payment_receipts_invoices (
-        payment_receipt_id,
-        invoice_id,
-        paid_amount
-    )
-VALUES (1, 1, 50000.00), -- Payment 1 → Invoice 1
-    (2, 2, 25000.00), -- Payment 2 → Invoice 2
-    (3, 4, 100000.00), -- Payment 3 → Invoice 4
-    (4, 6, 75000.00), -- Payment 4 → Invoice 6
-    (5, 7, 125000.00);
--- Payment 5 → Invoice 7
-
--- ============================================================================
--- VERIFICATION QUERIES (commented out - uncomment to run)
--- ============================================================================
-/*
--- Check data counts
-SELECT 'permissions' as table_name, COUNT(*) as count FROM permissions
-UNION ALL SELECT 'roles', COUNT(*) FROM roles
-UNION ALL SELECT 'users', COUNT(*) FROM users
-UNION ALL SELECT 'authors', COUNT(*) FROM authors
-UNION ALL SELECT 'categories', COUNT(*) FROM categories
-UNION ALL SELECT 'books', COUNT(*) FROM books
-UNION ALL SELECT 'import_receipts', COUNT(*) FROM import_receipts
-UNION ALL SELECT 'invoices', COUNT(*) FROM invoices
-UNION ALL SELECT 'payment_receipts', COUNT(*) FROM payment_receipts;
-
--- Check relationships
-SELECT COUNT(*) as role_permissions FROM roles_permissions;
-SELECT COUNT(*) as user_roles FROM users_roles;
-SELECT COUNT(*) as book_authors FROM authors_books;
-SELECT COUNT(*) as book_categories FROM books_categories;
-SELECT COUNT(*) as import_details FROM books_import_receipts;
-SELECT COUNT(*) as invoice_details FROM books_invoices;
-SELECT COUNT(*) as payment_details FROM payment_receipts_invoices;
-*/
+-- Update user debt after payment
+UPDATE `users`
+SET
+    `debt_amount_user` = `debt_amount_user` - 50000.00
+WHERE
+    `user_id` = 'user001';
