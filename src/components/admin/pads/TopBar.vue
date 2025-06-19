@@ -18,7 +18,7 @@ const currentDay = ref('')
 
 // Computed properties for user information
 const userName = computed(() => {
-  return currentUser.value?.name || 'Loading...'
+  return currentUser.value?.username || 'Loading...'
 })
 
 const userRole = computed(() => {

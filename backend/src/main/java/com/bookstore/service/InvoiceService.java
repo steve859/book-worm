@@ -51,6 +51,8 @@ public class InvoiceService {
     private MonthlyDebtReportDetailService monthlyDebtReportDetailService;
     @Autowired
     private MonthlyInventoryReportDetailService monthlyInventoryReportDetailService;
+    @Autowired
+    private ParameterService parameterService;
 
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
@@ -61,7 +63,7 @@ public class InvoiceService {
             throw new AppException(ErrorCode.USER_NOT_EXISTED);
         }
         Users customer = customerOpt.get();
-        if (customer.getDebtAmount().compareTo(BigDecimal.valueOf(1000000)) > 0) {
+        if (customer.getDebtAmount().compareTo(BigDecimal.valueOf(parameterService.getParamValue("maxDebtAmount"))) > 0) {
             throw new AppException(ErrorCode.DEBT_AMOUNT_LIMIT_EXCEEDED);
         }
         Invoices inputInvoice = invoiceMapper.toInvoice(request);
@@ -78,7 +80,7 @@ public class InvoiceService {
             BooksInvoices booksInvoice = new BooksInvoices();
             booksInvoice.setInvoice(inputInvoice);
             booksInvoice.setQuantity(outputBook.getQuantity());
-            booksInvoice.setSellPrice(book.getImportPrice().multiply(BigDecimal.valueOf(1.05)));
+            booksInvoice.setSellPrice(book.getSellPrice());
             totalAmount = totalAmount.add(booksInvoice.getSellPrice().multiply(BigDecimal.valueOf(outputBook.getQuantity())));
             bookDetails.add(booksInvoice);
             booksInvoice.setBook(book);
@@ -147,14 +149,14 @@ public class InvoiceService {
             BooksInvoices bookInvoice = oldBookDetailMap.get(bookId);
             if (bookInvoice != null) {
                 bookInvoice.setQuantity(newQty);
-                bookInvoice.setSellPrice(book.getImportPrice().multiply(BigDecimal.valueOf(1.05)));
+                bookInvoice.setSellPrice(book.getImportPrice().multiply(BigDecimal.valueOf(parameterService.getParamValue("sell_price_ratio"))));
             } else {
 
                 bookInvoice = new BooksInvoices();
                 bookInvoice.setInvoice(invoice);
                 bookInvoice.setBook(book);
                 bookInvoice.setQuantity(newQty);
-                bookInvoice.setSellPrice(book.getImportPrice().multiply(BigDecimal.valueOf(1.05)));
+                bookInvoice.setSellPrice(book.getImportPrice().multiply(BigDecimal.valueOf(parameterService.getParamValue("sell_price_ratio"))));
                 existingBookDetails.add(bookInvoice);
             }
 
@@ -185,7 +187,10 @@ public class InvoiceService {
                 iterator.remove();
             }
         }
-
+        monthlyDebtReportDetailService.createMonthlyDebtReportDetail(
+                invoice.getUserId(), invoice.getTotalAmount().multiply(BigDecimal.valueOf(-1)), "Debit");
+        monthlyDebtReportDetailService.createMonthlyDebtReportDetail(
+                invoice.getUserId(), invoice.getPaidAmount().multiply(BigDecimal.valueOf(-1)), "Credit");
         invoice.setUserId(request.getUserId());
         invoice.setTotalAmount(totalAmount);
         invoice.setPaidAmount(request.getPaidAmount());

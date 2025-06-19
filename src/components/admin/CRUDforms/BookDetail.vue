@@ -3,13 +3,23 @@ import FrameRU from '../frames/FrameRU.vue'
 import FrameText from '../texts/FrameText.vue'
 import TitleText from '../texts/TitleText.vue'
 import CRUDMainForm from './CRUDMainForm.vue'
+import {reactive} from "vue";
 
-defineProps(['book'])
+const props = defineProps(['book'])
+const viewBook = reactive({
+  bookId: props.book.bookId,
+  name: props.book.name,
+  publishedYear: String(props.book.publishedYear ?? ''),
+  importPrice: String(props.book.importPrice ?? ''),
+  quantity: String(props.book.quantity ?? ''),
+  authors: Array.isArray(props.book.authors) ? [...props.book.authors] : [],
+  categories: Array.isArray(props.book.categories) ? [...props.book.categories] : []
+})
 </script>
 
 <template>
   <div class="detail-wrapper">
-    <CRUDMainForm title="Book Detail" :data="book" @close="$emit('close')">
+    <CRUDMainForm title="Book Detail" :data="viewBook" @close="$emit('close')">
       <template #title>
         <TitleText>
           <template #text>
@@ -19,12 +29,12 @@ defineProps(['book'])
       </template>
       <template #content>
         <div class="frame-wrapper">
-          <FrameRU readonly v-model="book.name" placeholder="Title" />
-          <FrameRU readonly :modelValue="book.authors.join(', ')" placeholder="Author" />
-          <FrameRU readonly v-model="book.importPrice" placeholder="Import Price" />
-          <FrameRU readonly v-model="book.quantity" placeholder="Quantity" />
-          <FrameRU readonly v-model="book.publishedYear" placeholder="Published Year" />
-          <FrameRU readonly :modelValue="book.categories.join(', ')" placeholder="Categories">
+          <FrameRU readonly v-model="viewBook.name" placeholder="Title" />
+          <FrameRU readonly :modelValue="viewBook.authors.join(', ')" placeholder="Author" />
+          <FrameRU readonly v-model="viewBook.importPrice" placeholder="Import Price" />
+          <FrameRU readonly v-model="viewBook.quantity" placeholder="Quantity" />
+          <FrameRU readonly v-model="viewBook.publishedYear" placeholder="Published Year" />
+          <FrameRU readonly :modelValue="viewBook.categories.join(', ')" placeholder="Categories">
             <template #text-above>
               <FrameText>
                 <template #text>

@@ -1,9 +1,10 @@
 <script setup>
-import { ref } from 'vue'
+import {onMounted, ref} from 'vue'
 
 import ViewIcon from '@/assets/icons-vue/receipt.vue'
 import EditIcon from '@/assets/icons-vue/edit.vue'
 import DeleteIcon from '@/assets/icons-vue/trash.vue'
+import {useUser} from '@/data/user'
 
 defineProps({
   receipts: Array
@@ -13,6 +14,10 @@ const emit = defineEmits(['view-receipt', 'edit-receipt', 'delete-receipt'])
 
 const dialog = ref(false)
 const receiptToDelete = ref(null)
+const userStore = useUser()
+onMounted(() => {
+  userStore.fetchUsers()
+})
 
 const openDeleteDialog = (receipt) => {
   receiptToDelete.value = receipt
@@ -44,6 +49,9 @@ const headers = [
       :items-per-page="-1"
       hide-default-footer
     >
+      <template #item.userId="{ item }">
+        <span>{{ userStore.users?.find(u => u.id === item.userId)?.name }}</span>
+      </template>
       <template #item.action="{ item }">
         <div class="action-icons">
 

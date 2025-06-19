@@ -23,9 +23,9 @@ const paymentStore = usePaymentReceipts()
 const router = useRouter()
 
 const stats = ref({
-  import: { count: 0, lastUpdate: '', pending: 0 },
-  export: { count: 0, lastUpdate: '', pending: 0 },
-  payment: { total: 0, pending: 0, lastUpdate: '' }
+  import: { count: 0, lastUpdate: '' },
+  export: { count: 0, lastUpdate: '' },
+  payment: { total: 0, lastUpdate: '' }
 })
 
 onMounted(async () => {
@@ -38,7 +38,6 @@ onMounted(async () => {
 
   const imports = importStore.receipts
   stats.value.import.count = imports.length
-  stats.value.import.pending = imports.filter(r => r.status === 'PENDING').length
   stats.value.import.lastUpdate = imports.length
       ? new Date(Math.max(...imports.map(i => new Date(i.date || i.createAt)))).toLocaleDateString()
       : ''
@@ -52,7 +51,6 @@ onMounted(async () => {
 
   const payments = paymentStore.paymentReceipts
   stats.value.payment.total = payments.reduce((sum, p) => sum + (parseFloat(p.totalAmount || 0)), 0)
-  stats.value.payment.pending = payments.filter(p => p.status === 'PENDING').reduce((sum, p) => sum + (parseFloat(p.amount || 0)), 0)
   stats.value.payment.lastUpdate = payments.length
       ? new Date(Math.max(...payments.map(i => new Date(i.date || i.createAt)))).toLocaleDateString()
       : ''
@@ -93,10 +91,6 @@ function goToPaymentReceipt() { router.push('/manage/payment-receipt') }
               <span class="stat-value">{{ stats.import.count }}</span>
               <span class="stat-label">Recent Imports</span>
             </div>
-            <div class="stat-item">
-              <span class="stat-value">{{ stats.import.pending }}</span>
-              <span class="stat-label">Pending</span>
-            </div>
           </div>
           <div class="last-update">
             Last updated: {{ stats.import.lastUpdate }}
@@ -122,10 +116,6 @@ function goToPaymentReceipt() { router.push('/manage/payment-receipt') }
               <span class="stat-value">{{ stats.export.count }}</span>
               <span class="stat-label">Recent Invoices</span>
             </div>
-            <div class="stat-item">
-              <span class="stat-value">{{ stats.export.pending }}</span>
-              <span class="stat-label">Pending</span>
-            </div>
           </div>
           <div class="last-update">
             Last updated: {{ stats.export.lastUpdate }}
@@ -148,12 +138,8 @@ function goToPaymentReceipt() { router.push('/manage/payment-receipt') }
           <p>Track customer payments and manage outstanding balances.</p>
           <div class="stats">
             <div class="stat-item">
-              <span class="stat-value">{{ stats.payment.total }}</span>
+              <span class="stat-value">{{ stats.payment.total }} VND</span>
               <span class="stat-label">Total Received</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-value">{{ stats.payment.pending }}</span>
-              <span class="stat-label">Outstanding</span>
             </div>
           </div>
           <div class="last-update">

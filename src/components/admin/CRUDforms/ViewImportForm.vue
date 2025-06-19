@@ -2,6 +2,8 @@
 import CRUDMainForm from './CRUDMainForm.vue'
 import TitleText from '../texts/TitleText.vue'
 import BookInReceiptTable from '../tables/BookInReceiptTable.vue'
+import {useUser} from '@/data/user'
+import {onMounted} from "vue";
 
 const props = defineProps({
   importReceipt: {
@@ -11,6 +13,10 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close'])
+const userStore = useUser()
+onMounted(() => {
+  userStore.fetchUsers()
+})
 
 // Helper to format currency
 const formatCurrency = (value) => {
@@ -30,7 +36,7 @@ const formatCurrency = (value) => {
       <div class="scrollable-content">
         <div class="receipt-details">
           <p><strong>Receipt ID:</strong> {{ importReceipt.id }}</p>
-          <p><strong>Admin:</strong> {{ importReceipt.admin }}</p>
+          <p><strong>Admin:</strong> {{ userStore.users?.find(u => u.id === importReceipt.admin)?.name }}</p>
           <p><strong>Date:</strong> {{ importReceipt.date }}</p>
           <p><strong>Total Amount:</strong> {{ formatCurrency(importReceipt.total) }}</p>
         </div>

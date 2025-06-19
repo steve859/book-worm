@@ -43,6 +43,8 @@ public class BookService {
     BookMapper bookMapper;
     @Autowired
     private MonthlyInventoryReportDetailService monthlyInventoryReportDetailService;
+    @Autowired
+    ParameterService parameterService;
 
     private Set<Authors> resolveAuthors(List<String> authorsString) {
         Set<Authors> authorsSet = new HashSet<>();
@@ -163,6 +165,7 @@ public class BookService {
         int temp = book.getQuantity() + request.getQuantity();
         book.setImportPrice(request.getImportPrice());
         book.setQuantity(temp);
+
         return bookMapper.toBookResponse(bookRepository.save(book));
     }
 
@@ -172,6 +175,7 @@ public class BookService {
         book.setName(request.getName());
         book.setPublishedYear(request.getPublishedYear());
         book.setImportPrice(request.getImportPrice());
+        book.setSellPrice(request.getImportPrice().multiply(BigDecimal.valueOf(parameterService.getParamValue("sell_price_ratio"))));
         // book.setQuantity(request.getQuantity());
         book.setAuthors(resolveAuthors(request.getAuthors()));
         book.setCategories(resolveCategories(request.getCategories()));

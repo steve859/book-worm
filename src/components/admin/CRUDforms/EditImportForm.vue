@@ -69,7 +69,7 @@ const addBookToReceipt = () => {
   }
 
   // Business rule validation: minimum stock before import
-  if (regulations.value.minStockBeforeImport && selectedBook.value.quantity >= regulations.value.minStockBeforeImport) {
+  if ((regulations.value.minStockBeforeImport && selectedBook.value.quantity >= regulations.value.minStockBeforeImport) && (props.importReceipt.id==null && props.importReceipt.importReceiptId==null)) {
     showValidationDialog('Stock Above Threshold', `This book has ${selectedBook.value.quantity} in stock. Import is only allowed when stock is below ${regulations.value.minStockBeforeImport}.`)
     return;
   }
@@ -138,7 +138,7 @@ async function handleSave() {
 
   // Debug payload gửi lên
   const payload = {
-    adminId: props.importReceipt.admin || 'admin001',
+    adminId: props.importReceipt.admin || 'admin-001',
     bookDetails
   };
   console.log('Payload gửi lên:', payload);

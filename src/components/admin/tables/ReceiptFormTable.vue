@@ -1,5 +1,6 @@
 <script setup>
-import { defineProps, defineEmits, ref } from 'vue'
+import {defineProps, defineEmits, ref, onMounted} from 'vue'
+import {useUser} from '@/data/user'
 import EditIcon from '@/assets/icons-vue/edit.vue'
 import ViewIcon from '@/assets/icons-vue/receipt.vue'
 import DeleteIcon from '@/assets/icons-vue/trash.vue'
@@ -12,6 +13,11 @@ const dialogVisible = ref(false)
 const dialogTitle = ref('')
 const dialogMessage = ref('')
 const receiptToDelete = ref(null)
+const userStore = useUser()
+
+onMounted(() => {
+  userStore.fetchUsers()
+})
 
 function openDeleteDialog(receipt) {
   receiptToDelete.value = receipt
@@ -67,7 +73,7 @@ const headers = [
       </template>
 
       <template #item.admin="{ item }">
-        <span>{{ item.admin }}</span>
+        <span>{{ userStore.users?.find(u => u.id === item.admin)?.name }}</span>
       </template>
       <template #item.date="{ item }">
         <span>{{ item.date }}</span>
