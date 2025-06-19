@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import {useImportReceiptFormStore} from '@/data/importReceipts.js'
+import { useImportReceiptFormStore } from '@/data/importReceipts.js'
 import CRUDMainForm from './CRUDMainForm.vue'
 import TitleText from '../texts/TitleText.vue'
 import BookTable from '../tables/BookTable.vue'
@@ -54,13 +54,13 @@ function deleteBookInReceipt(book) {
 async function handleSave() {
   // Chuyển đổi books -> bookDetails theo đúng yêu cầu backend
   const bookDetails = (props.importReceipt.books || []).map(b => ({
-    bookId:        b.bookId || b.id,
-    name:          b.title || b.name,
+    bookId: b.bookId || b.id,
+    name: b.title || b.name,
     publishedYear: b.published_year || b.publishedYear,
-    importPrice:   b.import_price || b.importPrice,
-    quantity:      b.quantity,
-    authors:       Array.isArray(b.authors) ? b.authors : Object.values(b.authors || {}),
-    categories:    Array.isArray(b.categories) ? b.categories : Object.values(b.categories || {})
+    importPrice: b.import_price || b.importPrice,
+    quantity: b.quantity,
+    authors: Array.isArray(b.authors) ? b.authors : Object.values(b.authors || {}),
+    categories: Array.isArray(b.categories) ? b.categories : Object.values(b.categories || {})
   }));
 
   // Debug payload gửi lên
@@ -76,8 +76,8 @@ async function handleSave() {
   } else {
     // Update
     await store.updateReceipt(
-        props.importReceipt.id || props.importReceipt.importReceiptId,
-        payload
+      props.importReceipt.id || props.importReceipt.importReceiptId,
+      payload
     );
   }
   emit('close');
@@ -85,7 +85,7 @@ async function handleSave() {
 
 </script>
 <template>
-  <CRUDMainForm>
+  <CRUDMainForm @close="emit('close')">
     <template #title>
       <TitleText>
         <template #text>Edit Import Receipt</template>
@@ -93,8 +93,7 @@ async function handleSave() {
     </template>
     <template #content>
       <div class="scrollable-content">
-        <BookTableShort @select-book="handleSelectBook"
-  :excludedBookIds="importReceipt.books.map(book => book.id)"/>
+        <BookTableShort @select-book="handleSelectBook" :excludedBookIds="importReceipt.books.map(book => book.id)" />
 
         <div class="frame-wrapper">
           <TitleFrame readonly :modelValue="selectedBook?.title || ''" disabled placeholder="Title" />
@@ -126,9 +125,9 @@ async function handleSave() {
 </template>
 <style scoped>
 .frame-wrapper {
-    display: flex;
-    flex-direction: row;
-    padding-left: 12px;
-    gap: 10px;
+  display: flex;
+  flex-direction: row;
+  padding-left: 12px;
+  gap: 10px;
 }
 </style>

@@ -126,15 +126,15 @@ const headers = computed(() => rawHeaders.filter(h => {
     <!-- Delete Confirmation Dialog -->
     <v-dialog v-model="dialog" width="400" class="delete-dialog" persistent>
       <v-card>
-        <v-card-title class="text-h6">Xác nhận xóa</v-card-title>
+        <v-card-title class="text-h6">Confirm Deletion</v-card-title>
         <v-card-text>
-          Bạn có chắc chắn muốn xóa sách
+          Are you sure you will delete the book
           <strong>{{ bookToDeleteTitle }}</strong>?
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn color="grey" variant="text" @click="dialog = false">Hủy</v-btn>
-          <v-btn color="var(--vt-c-second-bg-color)" variant="tonal" @click="confirmDelete">Xóa</v-btn>
+          <v-btn color="grey" variant="text" @click="dialog = false">Cancel</v-btn>
+          <v-btn color="var(--vt-c-second-bg-color)" variant="tonal" @click="confirmDelete">Delete</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -142,14 +142,13 @@ const headers = computed(() => rawHeaders.filter(h => {
     <!-- Delete Error Dialog -->
     <v-dialog v-model="errorDialog" width="400" class="delete-dialog" persistent>
       <v-card>
-        <v-card-title class="text-h6">Không thể xóa</v-card-title>
+        <v-card-title class="text-h6">Cannot be deleted</v-card-title>
         <v-card-text>
-          Không thể xóa sách này vì vẫn còn ràng buộc với các dữ liệu khác trong hệ thống
-          (ví dụ: phiếu nhập, hóa đơn bán, báo cáo tồn kho...).
+          This book cannot be deleted because it is still tied to other data in the system.
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn color="var(--vt-c-second-bg-color)" variant="tonal" @click="errorDialog = false">Đóng</v-btn>
+          <v-btn color="var(--vt-c-second-bg-color)" variant="tonal" @click="errorDialog = false">Close</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -157,8 +156,7 @@ const headers = computed(() => rawHeaders.filter(h => {
 </template>
 
 <style scoped>
-.table-wrapper {
-}
+.table-wrapper {}
 
 .v-data-table {
   background-color: var(--vt-c-main-bg-color);
