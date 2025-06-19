@@ -3,7 +3,7 @@ import { getErrorMessage } from '@/data/error'
 import axios from 'axios'
 
 export const api = axios.create({
-  baseURL: 'http://localhost:8080/bookstore',  
+  baseURL: 'http://localhost:8080/bookstore',
   timeout: 5000,
   headers: { 'Content-Type': 'application/json' }
 })
@@ -28,7 +28,7 @@ api.interceptors.response.use(
       const friendly = getErrorMessage(code, vars)
       // You can choose to show a toast/alert here or pass it along
       // For example:
-      alert(friendly)
+      // alert(friendly) // Removed to let components handle their own errors
       error.friendlyMessage = friendly
     } else if (error.request) {
       error.friendlyMessage = 'Network error. Please check your connection.'

@@ -5,6 +5,7 @@ import { storeToRefs } from 'pinia'
 import EditIcon from '@/assets/icons-vue/edit.vue'
 import ViewIcon from '@/assets/icons-vue/receipt.vue'
 import DeleteIcon from '@/assets/icons-vue/trash.vue'
+import AppDialog from '../AppDialog.vue'
 
 const bookStore = useBook()
 // Use storeToRefs to maintain reactivity when destructuring
@@ -32,7 +33,7 @@ const emit = defineEmits(['view-book', 'edit-book', 'delete-book'])
 // Use filtered items from parent if provided, otherwise use all items
 const displayItems = computed(() => props.filteredItems || items.value)
 
-const dialog = ref(false)
+const confirmDialog = ref(false)
 const errorDialog = ref(false)
 const bookToDeleteId = ref(null)
 const bookToDeleteTitle = ref('')
@@ -41,7 +42,7 @@ function openDelete(item) {
   // Use bookId (integer) instead of id (string) for backend compatibility
   bookToDeleteId.value = item.bookId || item.id
   bookToDeleteTitle.value = item.title
-  dialog.value = true
+  confirmDialog.value = true
   console.log('Opening delete dialog for book:', item.bookId || item.id, item.title)
 }
 
@@ -49,14 +50,24 @@ function confirmDelete() {
   if (bookToDeleteId.value) {
     console.log('Confirming delete for book ID:', bookToDeleteId.value)
     emit('delete-book', bookToDeleteId.value)
-    dialog.value = false
+    confirmDialog.value = false
     bookToDeleteId.value = null
     bookToDeleteTitle.value = ''
   }
 }
 
+function cancelDelete() {
+  confirmDialog.value = false
+  bookToDeleteId.value = null
+  bookToDeleteTitle.value = ''
+}
+
 function showDeleteError() {
   errorDialog.value = true
+}
+
+function closeErrorDialog() {
+  errorDialog.value = false
 }
 
 // Expose function to parent component
@@ -124,34 +135,14 @@ const headers = computed(() => rawHeaders.filter(h => {
     </v-data-table>
 
     <!-- Delete Confirmation Dialog -->
-    <v-dialog v-model="dialog" width="400" class="delete-dialog" persistent>
-      <v-card>
-        <v-card-title class="text-h6">Confirm Deletion</v-card-title>
-        <v-card-text>
-          Are you sure you will delete the book
-          <strong>{{ bookToDeleteTitle }}</strong>?
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn color="grey" variant="text" @click="dialog = false">Cancel</v-btn>
-          <v-btn color="var(--vt-c-second-bg-color)" variant="tonal" @click="confirmDelete">Delete</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <AppDialog v-model="confirmDialog" title="Confirm Deletion"
+      :message="`Are you sure you will delete the book <strong>${bookToDeleteTitle}</strong>?`" @confirm="confirmDelete"
+      @cancel="cancelDelete" />
 
     <!-- Delete Error Dialog -->
-    <v-dialog v-model="errorDialog" width="400" class="delete-dialog" persistent>
-      <v-card>
-        <v-card-title class="text-h6">Cannot be deleted</v-card-title>
-        <v-card-text>
-          This book cannot be deleted because it is still tied to other data in the system.
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn color="var(--vt-c-second-bg-color)" variant="tonal" @click="errorDialog = false">Close</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <AppDialog v-model="errorDialog" title="Cannot be deleted"
+      message="This book cannot be deleted because it is still tied to other data in the system." :show-cancel="false"
+      @confirm="closeErrorDialog" />
   </div>
 </template>
 
@@ -180,22 +171,5 @@ const headers = computed(() => rawHeaders.filter(h => {
 .action-icons {
   display: flex;
   gap: 12px;
-}
-
-.delete-dialog .v-card {
-  width: 25vw;
-  border-radius: 20px;
-  background: var(--vt-c-main-bg-color);
-}
-
-.delete-dialog .v-card-title {
-  color: var(--vt-c-second-bg-color);
-  font-weight: bold;
-  text-align: center;
-}
-
-.delete-dialog .v-card-text {
-  font-size: 16px;
-  color: var(--vt-c-second-bg-color);
 }
 </style>

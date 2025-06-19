@@ -1,7 +1,7 @@
 <script setup>
 import { useExportReceiptFormStore } from '@/data/exportReceipts';
 import { useUser } from '@/data/user'; // Import useUser store
-import {computed, onMounted, ref} from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import CRUDMainForm from '../CRUDforms/CRUDMainForm.vue';
@@ -11,6 +11,7 @@ import SelectFrame from '../frames/SelectFrame.vue';
 import ExportReceiptTable from '../tables/ExportReceiptTable.vue';
 import ButtonText from '../texts/ButtonText.vue';
 import TitleText from '../texts/TitleText.vue';
+import AppDialog from '../AppDialog.vue';
 
 const router = useRouter()
 const store = useExportReceiptFormStore()
@@ -24,6 +25,9 @@ const selectedCustomer = ref(null) // Lưu trữ toàn bộ đối tượng khá
 // Thêm biến để quản lý nợ của khách hàng
 const customerDebts = ref([])
 
+// Thêm biến để quản lý dialog
+const showErrorDialog = ref(false)
+
 onMounted(() => {
   store.fetchReceipts()
 })
@@ -36,7 +40,7 @@ async function handleEdit(item) {
 async function handleAddExport() {
   // Kiểm tra xem đã chọn khách hàng chưa
   if (!selectedCustomer.value) {
-    alert('Please select a customer before adding an export receipt.')
+    showErrorDialog.value = true
     return
   }
 
@@ -56,7 +60,7 @@ async function handleAddExport() {
 function addCustomerDebt(customerId, amount, date) {
   // Chuyển đổi amount từ string sang number
   const debtAmount = parseFloat(amount)
-  
+
   // Nếu khách hàng đã có nợ, cập nhật nợ hiện tại
   if (customerDebts.value[customerId]) {
     customerDebts.value[customerId].amount += debtAmount
@@ -68,7 +72,7 @@ function addCustomerDebt(customerId, amount, date) {
       lastPayment: date
     }
   }
-  
+
   // Lưu trữ dữ liệu nợ để PaymentReceipt có thể truy cập
   // Trong thực tế, bạn có thể lưu trữ dữ liệu này trong localStorage hoặc tạo store riêng
   localStorage.setItem('customerDebts', JSON.stringify(customerDebts.value))
@@ -85,6 +89,10 @@ function closeEditForm() {
 function goBack() {
   router.push('/manage')
 }
+
+function closeErrorDialog() {
+  showErrorDialog.value = false
+}
 </script>
 
 <template>
@@ -95,15 +103,11 @@ function goBack() {
       </template>
       <template #content>
         <div class="scrollable-content">
-          <ExportReceiptTable :receipts="exportReceiptList" @edit-receipt="handleEdit" @delete-receipt="deleteReceipt"/>
+          <ExportReceiptTable :receipts="exportReceiptList" @edit-receipt="handleEdit"
+            @delete-receipt="deleteReceipt" />
           <div class="action-bar">
-            <SelectFrame
-              v-model="selectedCustomer"
-              :options="userStore.users"
-              option-label-key="name"
-              option-value-key="id"
-              placeholder="Select Customer"
-            />
+            <SelectFrame v-model="selectedCustomer" :options="userStore.users" option-label-key="name"
+              option-value-key="id" placeholder="Select Customer" />
             <ButtonCRUD @click="handleAddExport">
               <template #btn-text>
                 <ButtonText><template #text>ADD INVOICES</template></ButtonText>
@@ -118,34 +122,36 @@ function goBack() {
   <div v-else class="detail-wrapper">
     <EditExportForm :exportReceipt="editingReceipt" @close="closeEditForm" />
   </div>
+
+  <AppDialog v-model="showErrorDialog" title="Error" message="Please select a customer before adding an export receipt."
+    :show-cancel="false" @confirm="closeErrorDialog" />
 </template>
 
 <style scoped>
 .scrollable-content {
-max-height: calc(100vh - 150px);
-overflow-y: auto;
-padding-right: 12px;
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+  padding-right: 12px;
 }
 
 .detail-wrapper {
-color: var(--vt-c-main-bg-color);
-width: 100%;
-padding: 12px;
-font-family: Montserrat;
+  color: var(--vt-c-main-bg-color);
+  width: 100%;
+  padding: 12px;
+  font-family: Montserrat;
 }
 
 .action-bar {
-display: flex;
-align-items: center;
-gap: 10px;
-margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
 }
 
 .customer-select {
-padding: 6px 10px;
-font-size: 14px;
-border-radius: 4px;
-border: 1px solid #ccc;
+  padding: 6px 10px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
 }
-
 </style>
