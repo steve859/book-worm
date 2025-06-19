@@ -7,9 +7,20 @@ import UserReportTable from './tables/UserReportTable.vue'
 import VueDatePicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 
+import BackIcon from '@/assets/icons-vue/back-icon.vue'
+
 const book = useBook()
 const bookMonth = ref(new Date())
 const userMonth = ref(new Date())
+
+const currentPage = ref(0)
+
+function prevPage() {
+  if (currentPage.value > 0) currentPage.value--
+}
+function nextPage() {
+  if (currentPage.value < 1) currentPage.value++
+}
 </script>
 
 <template>
@@ -18,16 +29,39 @@ const userMonth = ref(new Date())
       <div class="left">
         <TitleText><template #text>Bookstore Report</template></TitleText>
       </div>
+      <!-- Nút chuyển trang -->
+      <div class="page-switcher">
+        <button
+          class="icon-btn"
+          @click="prevPage"
+          :disabled="currentPage === 0"
+          aria-label="Trang trước"
+        >
+          <BackIcon class="back-icon" />
+        </button>
+        <span style="margin: 0 8px;">{{ currentPage + 1 }}/2</span>
+        <button
+          class="icon-btn"
+          @click="nextPage"
+          :disabled="currentPage === 1"
+          aria-label="Trang sau"
+        >
+          <BackIcon class="back-icon" style="transform: rotate(180deg);" />
+        </button>
+      </div>
+
     </div>
     <div class="table-wrappers">
-      <div class="table-block">
+      <!-- Trang 1: BookReportTable -->
+      <div v-if="currentPage === 0" class="table-block">
         <div class="month-picker-wrapper">
           <VueDatePicker class="month-picker" v-model="bookMonth" month-picker :format="'MM/yyyy'" :clearable="false" />
         </div>
         <BookReportTable :month="bookMonth" />
       </div>
 
-      <div class="table-block">
+      <!-- Trang 2: UserReportTable -->
+      <div v-else class="table-block">
         <div class="month-picker-wrapper">
           <VueDatePicker class="month-picker" v-model="userMonth" month-picker :format="'MM/yyyy'" :clearable="false" />
         </div>
@@ -87,4 +121,67 @@ const userMonth = ref(new Date())
   text-align: center;
   color: var(--vt-c-second-bg-color);
 }
+
+.page-switcher {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.page-switcher button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid var(--vt-c-second-bg-color);
+  background-color: var(--vt-c-main-bg-color);
+  cursor: pointer;
+  padding: 0;
+  font-size: 18px;
+}
+
+.page-switcher button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.back-icon {
+  width: 20px;
+  height: 20px;
+  display: block;
+  margin: auto;
+  vertical-align: middle;
+}
+
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--vt-c-main-bg-color);
+  border-radius: 10px;
+  border: 1px solid var(--vt-c-second-bg-color);
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.2s, border 0.2s;
+  /* Loại bỏ font-size nếu không có text trong button */
+  font-size: 0;
+}
+
+.icon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.back-icon {
+  width: 20px;
+  height: 20px;
+  display: block;
+  margin: 0;
+  /* Đảm bảo không bị ảnh hưởng bởi vertical-align mặc định */
+  vertical-align: middle;
+}
+
 </style>
