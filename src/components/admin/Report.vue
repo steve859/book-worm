@@ -10,8 +10,10 @@ import '@vuepic/vue-datepicker/dist/main.css'
 import BackIcon from '@/assets/icons-vue/back-icon.vue'
 
 const book = useBook()
-const bookMonth = ref(new Date())
-const userMonth = ref(new Date())
+
+const initialDate = new Date();
+const bookMonth = ref({ month: initialDate.getMonth(), year: initialDate.getFullYear() })
+const userMonth = ref({ month: initialDate.getMonth(), year: initialDate.getFullYear() })
 
 const currentPage = ref(0)
 
@@ -63,7 +65,12 @@ function nextPage() {
       <!-- Trang 2: UserReportTable -->
       <div v-else class="table-block">
         <div class="month-picker-wrapper">
-          <VueDatePicker class="month-picker" v-model="userMonth" month-picker :format="'MM/yyyy'" :clearable="false" />
+          <VueDatePicker 
+            class="month-picker" 
+            v-model="userMonth"
+            month-picker 
+            :format="'MM/yyyy'" 
+            :clearable="false" />
         </div>
         <UserReportTable :month="userMonth" />
       </div>

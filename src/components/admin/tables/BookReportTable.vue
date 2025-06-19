@@ -3,7 +3,10 @@ import { ref, watch } from 'vue'
 import axios from '@/plugins/axios'
 
 const props = defineProps({
-  month: Date
+  month: {
+    type: Object,
+    required: true,
+  },
 })
 
 const reports = ref([])
@@ -22,21 +25,10 @@ const headers = [
 
 // Fetch báo cáo theo tháng
 async function fetchReportByMonth(monthDate) {
-  if (!monthDate) return
+  if (!monthDate || typeof monthDate.year !== 'number' || typeof monthDate.month !== 'number') return
 
-  let year, month
-
-  if (monthDate instanceof Date) {
-    year = monthDate.getFullYear()
-    month = monthDate.getMonth() + 1
-  } else if (monthDate.year && monthDate.month) {
-
-    year = monthDate.year
-    month = monthDate.month + 1
-  } else {
-    console.warn('Unsupported monthDate format:', monthDate)
-    return
-  }
+  const year = monthDate.year
+  const month = monthDate.month + 1
 
   console.log(`[FETCH] year: ${year}, month: ${month}`)
 

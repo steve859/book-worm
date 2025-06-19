@@ -22,10 +22,10 @@ const headers = [
 ]
 
 async function fetchReportByMonth(monthDate) {
-  if (!monthDate) return
+  if (!monthDate || typeof monthDate.year !== 'number' || typeof monthDate.month !== 'number') return
 
-  const year = monthDate.getFullYear()
-  const month = monthDate.getMonth() + 1
+  const year = monthDate.year
+  const month = monthDate.month + 1
 
   console.log(`[UserReport] Fetching for year: ${year}, month: ${month}`)
 
