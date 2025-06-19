@@ -18,7 +18,8 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Table(name = "monthly_debt_reports")
+@Table(name = "monthly_debt_reports", uniqueConstraints = @UniqueConstraint(columnNames = { "user_id",
+        "report_month" }))
 public class MonthlyDebtReports {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

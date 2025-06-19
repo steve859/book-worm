@@ -38,7 +38,7 @@ public class MonthlyDebtReportService {
                 Users user = userRepository.findById(userId).orElse(null);
                 MonthlyDebtReports monthlyDebtReports = MonthlyDebtReports.builder()
                                 .userId(userId)
-                                .reportMonth(reportDate.withDayOfMonth(1))
+                                .reportMonth(reportDate.withDayOfMonth(reportDate.lengthOfMonth()))
                                 .openingDebt(user != null && user.getDebtAmount() != null ? user.getDebtAmount()
                                                 : BigDecimal.ZERO)
                                 .debtIncrease(BigDecimal.ZERO)
@@ -55,7 +55,9 @@ public class MonthlyDebtReportService {
                         BigDecimal amount, String type) {
                 MonthlyDebtReports monthlyDebtReport = monthlyDebtReportRepository
                                 .findByUserIdAndReportMonth(monthlyDebtReportDetail.getUserId(),
-                                                monthlyDebtReportDetail.getReportDate().withDayOfMonth(1))
+                                                monthlyDebtReportDetail.getReportDate()
+                                                                .withDayOfMonth(monthlyDebtReportDetail.getReportDate()
+                                                                                .lengthOfMonth()))
                                 .orElseThrow(() -> new AppException(ErrorCode.MONTHLY_DEBT_REPORT_NOT_EXISTED));
                 if (type.equals("Debit")) {
                         monthlyDebtReport.setDebtIncrease(monthlyDebtReport.getDebtIncrease().add(amount));

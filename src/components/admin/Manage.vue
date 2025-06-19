@@ -15,12 +15,17 @@ import RegulationText from './texts/RegulationText.vue'
 import InputFrame from './frames/InputFrame.vue'
 import ButtonCRUD from './buttons/ButtonCRUD.vue'
 import ButtonText from './texts/ButtonText.vue'
+import AppDialog from './AppDialog.vue'
 
 const { regulations, fetchRegulations, saveRegulations } = useRegulation()
 const importStore = useImportReceiptFormStore()
 const exportStore = useExportReceiptFormStore()
 const paymentStore = usePaymentReceipts()
 const router = useRouter()
+
+const dialogVisible = ref(false)
+const dialogTitle = ref('')
+const dialogMessage = ref('')
 
 const stats = ref({
   import: { count: 0, lastUpdate: '' },
@@ -39,22 +44,36 @@ onMounted(async () => {
   const imports = importStore.receipts
   stats.value.import.count = imports.length
   stats.value.import.lastUpdate = imports.length
-      ? new Date(Math.max(...imports.map(i => new Date(i.date || i.createAt)))).toLocaleDateString()
-      : ''
+    ? new Date(Math.max(...imports.map(i => new Date(i.date || i.createAt)))).toLocaleDateString()
+    : ''
 
   const invoices = exportStore.receipts
   stats.value.export.count = invoices.length
   stats.value.export.pending = invoices.filter(r => r.status === 'PENDING').length
   stats.value.export.lastUpdate = invoices.length
-      ? new Date(Math.max(...invoices.map(i => new Date(i.date || i.createAt)))).toLocaleDateString()
-      : ''
+    ? new Date(Math.max(...invoices.map(i => new Date(i.date || i.createAt)))).toLocaleDateString()
+    : ''
 
   const payments = paymentStore.paymentReceipts
   stats.value.payment.total = payments.reduce((sum, p) => sum + (parseFloat(p.totalAmount || 0)), 0)
   stats.value.payment.lastUpdate = payments.length
-      ? new Date(Math.max(...payments.map(i => new Date(i.date || i.createAt)))).toLocaleDateString()
-      : ''
+    ? new Date(Math.max(...payments.map(i => new Date(i.date || i.createAt)))).toLocaleDateString()
+    : ''
 })
+
+async function handleSaveRegulations() {
+  try {
+    await saveRegulations()
+    dialogTitle.value = 'Success'
+    dialogMessage.value = 'Regulations have been updated successfully!'
+    dialogVisible.value = true
+  } catch (error) {
+    console.error('Failed to save regulations:', error)
+    dialogTitle.value = 'Error'
+    dialogMessage.value = 'Failed to save regulations. Please try again.'
+    dialogVisible.value = true
+  }
+}
 
 function goToImportBook() { router.push('/manage/import-book') }
 function goToExportBook() { router.push('/manage/export-book') }
@@ -170,7 +189,7 @@ function goToPaymentReceipt() { router.push('/manage/payment-receipt') }
         <InputFrame v-model="regulations.minStockAfterExport" />
       </div>
       <div class="row-regulation">
-        <RegulationText><template #text>The amount collected does not exceed the amount owed</template></RegulationText>
+        <RegulationText><template #text>Allow Partial Payment</template></RegulationText>
         <div>
           <v-switch style="transform: translateY(8px);" v-model="regulations.allowPartialPayment" :true-value="true"
             :false-value="false" color="var(--vt-c-second-bg-color)" inset density="compact" class="ma-0 pa-0" />
@@ -178,7 +197,7 @@ function goToPaymentReceipt() { router.push('/manage/payment-receipt') }
       </div>
 
       <div class="row-regulation">
-        <ButtonCRUD @click="saveRegulations">
+        <ButtonCRUD @click="handleSaveRegulations">
           <template #btn-text>
             <ButtonText><template #text>SAVE</template></ButtonText>
           </template>
@@ -186,6 +205,7 @@ function goToPaymentReceipt() { router.push('/manage/payment-receipt') }
       </div>
     </div>
   </div>
+  <AppDialog v-model="dialogVisible" :title="dialogTitle" :message="dialogMessage" :show-cancel="false" />
 </template>
 
 <style scoped>

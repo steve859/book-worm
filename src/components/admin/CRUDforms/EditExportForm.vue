@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { useExportReceiptFormStore } from '@/data/exportReceipts.js'
 import CRUDMainForm from './CRUDMainForm.vue'
 import TitleText from '../texts/TitleText.vue'
@@ -20,7 +20,18 @@ const props = defineProps({
 const emit = defineEmits(['close'])
 const selectedBook = ref(null);
 const quantity = ref('')
-const paidAmount = ref(props.exportReceipt.paidAmount || '')
+
+// Tính tổng tiền tự động
+const totalAmount = computed(() => {
+  if (!props.exportReceipt.books || props.exportReceipt.books.length === 0) {
+    return 0
+  }
+  return props.exportReceipt.books.reduce((total, book) => {
+    const price = book.export_price || book.sellPrice || 0
+    const quantity = book.quantity || 0
+    return total + (price * quantity)
+  }, 0)
+})
 
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
@@ -31,10 +42,6 @@ function showValidationDialog(title, message) {
   dialogMessage.value = message
   dialogVisible.value = true
 }
-
-watch(() => props.exportReceipt.paidAmount, (val) => {
-  paidAmount.value = val
-})
 
 // ĐẢM BẢO props.exportReceipt.books luôn là mảng
 if (!props.exportReceipt.books) {
@@ -79,12 +86,6 @@ function handleDeleteBook(book) {
 }
 
 async function handleSave() {
-  const finalPaidAmount = parseFloat(paidAmount.value)
-  if (isNaN(finalPaidAmount) || finalPaidAmount < 0) {
-    showValidationDialog('Invalid Input', 'Please enter a valid paid amount.')
-    return
-  }
-
   if (!props.exportReceipt.books || props.exportReceipt.books.length === 0) {
     showValidationDialog('Invalid Input', 'An invoice must have at least one book.')
     return
@@ -103,7 +104,7 @@ async function handleSave() {
   const payload = {
     userId: props.exportReceipt.userId,
     adminId: props.exportReceipt.admin || 'admin001',   // Sửa đúng tên props!
-    paidAmount: parseInt(paidAmount.value) || 0,
+    paidAmount: 0, // All payments handled via Payment Receipt form
     bookDetails
   }
   console.log('Payload gửi lên:', payload);
@@ -152,8 +153,10 @@ async function handleSave() {
 
         <BookOutReceiptTable :books="exportReceipt.books" :customer="exportReceipt.customer"
           @delete-book="handleDeleteBook" />
-        <div style="margin-top: 20px; display: flex; justify-content: flex-end; align-items: center; gap: 40px;">
-          <ReceiptFormFrame v-model="paidAmount" placeholder="Paid Amount" style="width: 150px;" />
+        <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+          <div style="font-family: Montserrat; color: var(--vt-c-second-bg-color); font-size: 16px; font-weight: 600;">
+            Total: {{ totalAmount.toLocaleString() }} VND
+          </div>
           <ButtonReceipt @click="handleSave">
             <template #btn-text>
               <ButtonText>

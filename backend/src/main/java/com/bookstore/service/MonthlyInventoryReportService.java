@@ -39,7 +39,7 @@ public class MonthlyInventoryReportService {
                 MonthlyInventoryReports monthlyInventoryReport = MonthlyInventoryReports.builder()
                                 .bookId(Integer.valueOf(bookId))
                                 .bookName(book.getName())
-                                .reportMonth(reportDate)
+                                .reportMonth(reportDate.withDayOfMonth(reportDate.lengthOfMonth()))
                                 .openingStock(book.getQuantity())
                                 .stockIncrease(0)
                                 .stockDecrease(0)
@@ -67,7 +67,9 @@ public class MonthlyInventoryReportService {
                         MonthlyInventoryReportDetails monthlyInventoryReportDetail, int amount, String type) {
                 MonthlyInventoryReports monthlyInventoryReport = monthlyInventoryReportRepository
                                 .findByBookIdAndReportMonth(monthlyInventoryReportDetail.getBookId(),
-                                                monthlyInventoryReportDetail.getReportDate().withDayOfMonth(1))
+                                                monthlyInventoryReportDetail.getReportDate()
+                                                                .withDayOfMonth(monthlyInventoryReportDetail
+                                                                                .getReportDate().lengthOfMonth()))
                                 .orElseThrow(() -> new AppException(ErrorCode.MONTHLY_INVENTORY_REPORT_NOT_EXISTED));
                 if (type.equals("Import")) {
                         monthlyInventoryReport.setStockIncrease(monthlyInventoryReport.getStockIncrease() + amount);

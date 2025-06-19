@@ -22,9 +22,9 @@ const dialogTitle = ref('')
 const dialogMessage = ref('')
 const dialogButtonCancel = ref(true)
 
-const onConfirm = ref(() => {})
+const onConfirm = ref(() => { })
 
-function showDialog(title, message, options = true, confirmCallback = () => {}) {
+function showDialog(title, message, options = true, confirmCallback = () => { }) {
   dialogTitle.value = title
   dialogMessage.value = message
   dialogVisible.value = true
@@ -47,7 +47,7 @@ const paymentAmount = ref('')
 const customersWithDebt = computed(() => {
   return userStore.users.map(user => ({
     ...user,
-    debtAmount: `${user.debtAmount} VND`,
+    debtAmount: user.debtAmount != null ? user.debtAmount.toLocaleString() + ' VND' : '0 VND',
   }))
 })
 
@@ -84,20 +84,15 @@ async function processPayment() {
     totalAmount: paymentAmount.value // 👈 đảm bảo là số
   }
 
-  const success = await paymentReceiptsStore.addPaymentReceipt(payload)
+  const result = await paymentReceiptsStore.addPaymentReceipt(payload)
 
-  if (success) {
-    showDialog('Payment Success', `Processed payment for: ${selectedCustomer.value.name}`, false, () => {})
+  if (result.success) {
+    showDialog('Payment Success', `Processed payment for: ${selectedCustomer.value.name}`, false, () => { })
     selectedCustomer.value = {}
     paymentAmount.value = ''
   } else {
-    showDialog('Error', 'Failed to process payment.', false)
+    showDialog('Error', result.message || 'Failed to process payment.', false)
   }
-
-  dialogVisible.value = false
-  dialogTitle.value = ''
-  dialogMessage.value = ''
-  dialogButtonCancel.value = true
 }
 
 
@@ -105,8 +100,14 @@ const handleSelectPayment = (customer) => {
   selectedCustomer.value = customer;
 };
 
-const handleDeleteReceipt = (receipt) => {
-  paymentReceiptsStore.deletePaymentReceipt(receipt.id)
+const handleDeleteReceipt = async (receipt) => {
+  const result = await paymentReceiptsStore.deletePaymentReceipt(receipt.id)
+
+  if (result.success) {
+    showDialog('Delete Success', `Payment receipt #${receipt.id} deleted successfully.`, false)
+  } else {
+    showDialog('Delete Failed', result.message || 'Failed to delete payment receipt.', false)
+  }
 }
 </script>
 
@@ -118,14 +119,12 @@ const handleDeleteReceipt = (receipt) => {
       </template>
       <template #content>
         <div class="scrollable-content">
-          <PaymentFormTable 
-            @select-payment="handleSelectPayment"
-            v-model="selectedCustomer"
-            :customers="customersWithDebt"
-          />
+          <PaymentFormTable @select-payment="handleSelectPayment" v-model="selectedCustomer"
+            :customers="customersWithDebt" />
           <div class="action-bar">
             <div class="frame-wrapper">
               <TitleFrame readonly placeholder="Name" :modelValue="selectedCustomer?.name || ''" />
+              <TitleFrame readonly placeholder="Debt" :modelValue="selectedCustomer?.debtAmount || '0 VND'" />
               <ReceiptFormFrame placeholder="Amount" v-model="paymentAmount" />
               <ButtonCRUD @click="handlePayment">
                 <template #btn-text>
@@ -134,32 +133,24 @@ const handleDeleteReceipt = (receipt) => {
               </ButtonCRUD>
             </div>
           </div>
-          <PaymentReceiptTable
-            :receipts="paymentReceiptsStore.paymentReceipts"
-            @delete-receipt="handleDeleteReceipt"
-          />
+          <PaymentReceiptTable :receipts="paymentReceiptsStore.paymentReceipts" @delete-receipt="handleDeleteReceipt" />
         </div>
       </template>
     </CRUDMainForm>
   </div>
-  <AppDialog
-  v-model="dialogVisible"
-  :title="dialogTitle"
-  :showCancel="dialogButtonCancel"  
-  :message="dialogMessage"
-  @confirm="onConfirm()"
-/>
+  <AppDialog v-model="dialogVisible" :title="dialogTitle" :showCancel="dialogButtonCancel" :message="dialogMessage"
+    @confirm="onConfirm()" />
 
 </template>
 
 <style scoped>
-
 .frame-wrapper {
   display: flex;
   flex-direction: row;
   padding-left: 12px;
   gap: 10px;
 }
+
 .scrollable-content {
   max-height: calc(100vh - 150px);
   overflow-y: auto;

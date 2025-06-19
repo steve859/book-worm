@@ -50,10 +50,11 @@ export const usePaymentReceipts = defineStore('paymentReceipts', () => {
             error.value = null
             await api.post('/paymentReceipts', paymentReceiptData)
             await fetchPaymentReceipts()
-            return true
+            return { success: true }
         } catch (e) {
             error.value = e
-            return false
+            const msg = e.response?.data?.message || e.message || 'Unknown error'
+            return { success: false, message: msg }
         } finally {
             loading.value = false
         }
@@ -62,12 +63,24 @@ export const usePaymentReceipts = defineStore('paymentReceipts', () => {
     const updatePaymentReceipt = (updatedPaymentReceipt) => {
         const index = paymentReceipts.value.findIndex(u => u.id === updatedPaymentReceipt.id)
         if (index !== -1) {
-        paymentReceipts.value[index] = { ...updatedPaymentReceipt }
+            paymentReceipts.value[index] = { ...updatedPaymentReceipt }
         }
     }
 
-    const deletePaymentReceipt = (receiptId) => {  // ✅ Thêm function delete
-        paymentReceipts.value = paymentReceipts.value.filter(r => r.id !== receiptId)
+    const deletePaymentReceipt = async (receiptId) => {
+        try {
+            loading.value = true
+            error.value = null
+            await api.delete(`/paymentReceipts/${receiptId}`)
+            await fetchPaymentReceipts()
+            return { success: true }
+        } catch (e) {
+            error.value = e
+            const msg = e.response?.data?.message || e.message || 'Failed to delete payment receipt'
+            return { success: false, message: msg }
+        } finally {
+            loading.value = false
+        }
     }
 
     return {
