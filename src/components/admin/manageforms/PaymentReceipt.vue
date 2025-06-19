@@ -69,12 +69,12 @@ function handlePayment() {
   const customerName = selectedCustomer.value.name
 
   showDialog(
-    'Confirm Payment',
-    `Are you sure you want to process payment for: ${customerName}?`,
-    true,
-    () => {
-      processPayment()
-    }
+      'Confirm Payment',
+      `Are you sure you want to process payment for: ${customerName}?`,
+      true,
+      () => {
+        processPayment()
+      }
   )
 }
 
@@ -120,7 +120,7 @@ const handleDeleteReceipt = async (receipt) => {
       <template #content>
         <div class="scrollable-content">
           <PaymentFormTable @select-payment="handleSelectPayment" v-model="selectedCustomer"
-            :customers="customersWithDebt" />
+                            :customers="customersWithDebt" />
           <div class="action-bar">
             <div class="frame-wrapper">
               <TitleFrame readonly placeholder="Name" :modelValue="selectedCustomer?.name || ''" />
@@ -139,7 +139,7 @@ const handleDeleteReceipt = async (receipt) => {
     </CRUDMainForm>
   </div>
   <AppDialog v-model="dialogVisible" :title="dialogTitle" :showCancel="dialogButtonCancel" :message="dialogMessage"
-    @confirm="onConfirm()" />
+             @confirm="onConfirm()" />
 
 </template>
 

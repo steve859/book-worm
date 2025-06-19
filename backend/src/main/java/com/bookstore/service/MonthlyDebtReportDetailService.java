@@ -27,9 +27,9 @@ public class MonthlyDebtReportDetailService {
         MonthlyDebtReportService monthlyDebtReportService;
 
         public MonthlyDebtReportDetailService(MonthlyDebtReportDetailRepository monthlyDebtReportDetailRepository,
-                        MonthlyDebtReportDetailMapper monthlyDebtReportDetailMapper,
-                        MonthlyDebtReportRepository monthlyDebtReportRepository,
-                        MonthlyDebtReportService monthlyDebtReportService) {
+                                              MonthlyDebtReportDetailMapper monthlyDebtReportDetailMapper,
+                                              MonthlyDebtReportRepository monthlyDebtReportRepository,
+                                              MonthlyDebtReportService monthlyDebtReportService) {
                 this.monthlyDebtReportDetailRepository = monthlyDebtReportDetailRepository;
                 this.monthlyDebtReportDetailMapper = monthlyDebtReportDetailMapper;
                 this.monthlyDebtReportRepository = monthlyDebtReportRepository;
@@ -37,28 +37,28 @@ public class MonthlyDebtReportDetailService {
         }
 
         public MonthlyDebtReportDetailResponse createMonthlyDebtReportDetail(String userId, BigDecimal amount,
-                        String type) {
+                                                                             String type) {
                 MonthlyDebtReportDetails monthlyDebtReportDetail = MonthlyDebtReportDetails.builder()
-                                .userId(userId)
-                                .amount(amount)
-                                .type(type)
-                                .reportDate(LocalDate.now())
-                                .build();
+                        .userId(userId)
+                        .amount(amount)
+                        .type(type)
+                        .reportDate(LocalDate.now())
+                        .build();
                 MonthlyDebtReports monthlyDebtReport = monthlyDebtReportRepository
-                                .findByUserIdAndReportMonth(userId,
-                                                monthlyDebtReportDetail.getReportDate()
-                                                                .withDayOfMonth(monthlyDebtReportDetail.getReportDate()
-                                                                                .lengthOfMonth()))
-                                .orElse(null);
+                        .findByUserIdAndReportMonth(userId,
+                                monthlyDebtReportDetail.getReportDate()
+                                        .withDayOfMonth(monthlyDebtReportDetail.getReportDate()
+                                                .lengthOfMonth()))
+                        .orElse(null);
                 if (monthlyDebtReport == null) {
                         monthlyDebtReportService.createMonthlyDebtReport(userId,
-                                        monthlyDebtReportDetail.getReportDate().withDayOfMonth(
-                                                        monthlyDebtReportDetail.getReportDate().lengthOfMonth()));
+                                monthlyDebtReportDetail.getReportDate().withDayOfMonth(
+                                        monthlyDebtReportDetail.getReportDate().lengthOfMonth()));
                         monthlyDebtReport = monthlyDebtReportRepository
-                                        .findByUserIdAndReportMonth(userId, monthlyDebtReportDetail.getReportDate()
-                                                        .withDayOfMonth(monthlyDebtReportDetail.getReportDate()
-                                                                        .lengthOfMonth()))
-                                        .orElse(null);
+                                .findByUserIdAndReportMonth(userId, monthlyDebtReportDetail.getReportDate()
+                                        .withDayOfMonth(monthlyDebtReportDetail.getReportDate()
+                                                .lengthOfMonth()))
+                                .orElse(null);
                 }
                 monthlyDebtReportDetail.setDebtReport(monthlyDebtReport);
                 monthlyDebtReportDetailRepository.save(monthlyDebtReportDetail);
