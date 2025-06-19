@@ -85,7 +85,7 @@ const headers = computed(() => rawHeaders.filter(h => {
 <template>
   <div class="table-wrapper">
     <v-data-table :headers="headers" :items="displayItems" item-value="id" :items-per-page="-1" fixed-header
-      height="66vh" class="elevation-1" hide-default-footer>
+      height="60vh" class="elevation-1" hide-default-footer>
       <template #item.action="{ item }">
         <div class="action-icons">
           <v-tooltip text="View" location="top">
@@ -158,7 +158,6 @@ const headers = computed(() => rawHeaders.filter(h => {
 
 <style scoped>
 .table-wrapper {
-  /* Remove scroll from wrapper, let v-data-table handle it */
 }
 
 .v-data-table {

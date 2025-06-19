@@ -1,7 +1,7 @@
 <template>
   <v-container fluid>
     <div class="table-wrapper">
-      <v-data-table :headers="headers" :items="displayItems" class="elevation-1" item-value="id" :items-per-page="-1"
+      <v-data-table :headers="headers" :items="displayItems" class="elevation-1" item-value="id" :items-per-page="-1" height="60vh"
         hide-default-footer>
         <template #item.action="{ item }">
 
@@ -111,17 +111,6 @@ const headers = [
 <style scoped>
 /* Wrapper cho scroll */
 .table-wrapper {
-
-  max-height: 66vh;
-  /* chiều cao tối đa */
-  overflow-y: auto;
-  /* bật scroll dọc */
-
-  max-height: 60vh;
-  /* chiều cao tối đa */
-  overflow-y: auto;
-  /* bật scroll dọc */
-
 }
 
 .v-data-table {

@@ -185,7 +185,7 @@ function closeEdit() {
       <BookTable ref="bookTable" :filteredItems="filteredBooks" @view-book="handleViewBook" @edit-book="handleEditBook"
         @delete-book="deleteBook" />
 
-      <ButtonCRUD @click="handleAddBook">
+      <ButtonCRUD @click="handleAddBook" style="margin-top: 20px;">
         <template #btn-text>
           <ButtonText><template #text>ADD BOOK</template></ButtonText>
         </template>
@@ -203,6 +203,7 @@ function closeEdit() {
 <style scoped>
 .content {
   width: 100%;
+  height: 100%;
   padding: 20px;
 }
 

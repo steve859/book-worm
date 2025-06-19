@@ -215,6 +215,9 @@ function goToPaymentReceipt() { router.push('/manage/payment-receipt') }
   width: 100%;
   height: 100%;
   padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .top-bar {

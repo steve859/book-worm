@@ -39,4 +39,9 @@ import TopBar from './pads/TopBar.vue'
     display: flex;
     flex-direction: column;
 }
+
+.main-form, .main-content-area, .main-content {
+    height: 100vh;
+    min-height: 0; 
+}
 </style>
