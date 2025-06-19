@@ -16,7 +16,8 @@ public abstract class MonthlyDebtReportMapper {
 
     @Mappings({
             @Mapping(target = "paidAmount", source = "debtPayment"),
-            @Mapping(target = "userName", expression = "java(getUserName(monthlyDebtReports.getUserId()))")
+            @Mapping(target = "userName", expression = "java(getUserName(monthlyDebtReports.getUserId()))"),
+            @Mapping(target = "userId", source = "userId")
     })
     public abstract MonthlyDebtReportResponse toMonthlyDebtReportResponse(MonthlyDebtReports monthlyDebtReports);
 

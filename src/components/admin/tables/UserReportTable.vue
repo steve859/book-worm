@@ -50,19 +50,13 @@ watch(() => props.month, fetchReportByMonth, { immediate: true })
 <template>
   <v-container fluid>
     <div v-if="loading">Loading...</div>
-    <v-data-table
-      v-else
-      :headers="headers"
-      :items="reports"
-      class="elevation-1"
-      item-value="id"
-      :items-per-page="-1"
-      hide-default-footer
-    >
+    <v-data-table v-else :headers="headers" :items="reports" class="elevation-1" item-value="id" :items-per-page="-1"
+      hide-default-footer>
       <template #item.openingDebt="{ item }">{{ item.openingDebt?.toLocaleString() }}</template>
       <template #item.debtIncrease="{ item }">{{ item.debtIncrease?.toLocaleString() }}</template>
       <template #item.paidAmount="{ item }">{{ item.paidAmount?.toLocaleString() }}</template>
       <template #item.closingDebt="{ item }">{{ item.closingDebt?.toLocaleString() }}</template>
+      <template #item.userId="{ item }">{{ item.userId }}</template>
     </v-data-table>
   </v-container>
 </template>
