@@ -149,10 +149,26 @@ export const useExportReceiptFormStore = defineStore('exportForm', () => {
     }
   }
 
-  const deleteExportReceiptForm = (form) => {
-    if (!form || !form.id) return
-    receipts.value = receipts.value.filter(f => f.id !== form.id)
-    delete receiptDetails[form.id]
+async function deleteExportReceiptForm(id) {
+    loading.value = true; error.value = null
+    try {
+      const { data } = await api.delete(`/invoices/${id}`);
+      await fetchReceipts();
+      console.log('DEBUG data from API:', data.result)
+      // Refresh user debts so Payment Receipt form shows updated current debt
+      try {
+        const userStore = useUser();
+        await userStore.fetchUsers();
+      } catch (err) {
+        console.warn('[ExportReceipts] Failed to refresh users after invoice update', err);
+      }
+      return data.result;
+    } catch (e) {
+      console.error('[Invoice] update failed', e);
+      throw e;
+    } finally {
+      loading.value = false;
+    }
   }
 
   return {

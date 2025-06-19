@@ -78,8 +78,23 @@ function addCustomerDebt(customerId, amount, date) {
   localStorage.setItem('customerDebts', JSON.stringify(customerDebts.value))
 }
 
-function deleteReceipt(receipt) {
-  store.deleteExportReceiptForm(receipt)
+async function deleteReceipt(receipts) {
+  try {
+    await store.deleteExportReceiptForm(receipts.id)
+  } catch (error) {
+    console.error('Delete receipt failed:', error)
+
+    // Get error message from API response or use default
+    let message
+
+    if (error.response?.data?.message) {
+      message = error.response.data.message
+    } else if (error.friendlyMessage) {
+      message = error.friendlyMessage
+    }
+
+    showErrorDialog(message)
+  }
 }
 
 function closeEditForm() {

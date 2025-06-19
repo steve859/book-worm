@@ -228,6 +228,19 @@ public class InvoiceService {
     public void deleteInvoice(Integer invoiceId) {
         Invoices invoice = invoiceRepository.findById(invoiceId).orElse(null);
         if (invoice != null) {
+            Set<BooksInvoices> bookDetails = invoice.getBookDetails();
+            Users user = userRepository.findById(invoice.getUserId()).orElse(null);
+            if(user == null) {
+                throw new AppException(ErrorCode.USER_NOT_EXISTED);
+            }
+            user.setDebtAmount(user.getDebtAmount().subtract((invoice.getTotalAmount().subtract(invoice.getPaidAmount()))));
+            monthlyDebtReportDetailService.createMonthlyDebtReportDetail(invoice.getUserId(), invoice.getPaidAmount().multiply(BigDecimal.valueOf(-1)), "Credit");
+            monthlyDebtReportDetailService.createMonthlyDebtReportDetail(invoice.getUserId(), invoice.getTotalAmount().multiply(BigDecimal.valueOf(-1)), "Debit");
+            for (BooksInvoices detail : bookDetails) {
+                Books book = detail.getBook();
+                book.setQuantity(book.getQuantity()+detail.getQuantity());
+                monthlyInventoryReportDetailService.createMonthlyInventoryReportDetail(book.getBookId(), -detail.getQuantity(), "Export");
+            }
             invoiceRepository.delete(invoice);
         }
     }
