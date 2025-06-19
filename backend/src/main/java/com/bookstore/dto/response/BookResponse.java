@@ -20,6 +20,7 @@ public class BookResponse {
     String name;
     Integer publishedYear;
     BigDecimal importPrice;
+    BigDecimal sellPrice;
     int quantity;
     Set<AuthorResponse> authors;
     Set<CategoryResponse> categories;

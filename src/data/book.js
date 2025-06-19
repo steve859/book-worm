@@ -25,6 +25,7 @@ export const useBook = defineStore('book', () => {
         categories: b.categories?.map(c => c.categoryName) || [],
         quantity: b.quantity,
         import_price: b.importPrice,
+        export_price: b.sellPrice,
         publishedYear: b.publishedYear,
         _raw: b
       }))
@@ -53,6 +54,7 @@ export const useBook = defineStore('book', () => {
         categories: b.categories.map(c => c.categoryName),   // ✅ fix ở đây
         quantity: b.quantity,
         importPrice: b.importPrice,
+        export_price: b.sellPrice,
         publishedYear: b.publishedYear,
       }
     } catch (e) {

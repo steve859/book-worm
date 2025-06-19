@@ -97,7 +97,7 @@ async function handleSave() {
     quantity: b.quantity,
     // authors:       Array.isArray(b.authors) ? b.authors : Object.values(b.authors || {}),
     // categories:    Array.isArray(b.categories) ? b.categories : Object.values(b.categories || {}),
-    // importPrice:   b.importPrice || b.import_price
+    // importPrice: b.importPrice || b.import_price
   }))
 
   const payload = {
