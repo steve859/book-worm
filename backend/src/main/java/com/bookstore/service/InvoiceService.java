@@ -99,12 +99,20 @@ public class InvoiceService {
 
         inputInvoice.setCreateAt(LocalDate.now());
         inputInvoice.setTotalAmount(totalAmount);
+        if (inputInvoice.getPaidAmount() == null) {
+            inputInvoice.setPaidAmount(BigDecimal.ZERO);
+        }
         inputInvoice.setDebtAmount(totalAmount.subtract(inputInvoice.getPaidAmount()));
         inputInvoice.setBookDetails(bookDetails);
+        log.info("Creating invoice - TotalAmount: {}, PaidAmount: {}, DebtAmount: {}",
+                totalAmount, inputInvoice.getPaidAmount(), inputInvoice.getDebtAmount());
         monthlyDebtReportDetailService.createMonthlyDebtReportDetail(inputInvoice.getUserId(), totalAmount, "Debit");
         if (inputInvoice.getPaidAmount().compareTo(BigDecimal.ZERO) > 0) {
+            log.info("Creating Credit entry for paidAmount: {}", inputInvoice.getPaidAmount());
             monthlyDebtReportDetailService.createMonthlyDebtReportDetail(inputInvoice.getUserId(),
                     inputInvoice.getPaidAmount(), "Credit");
+        } else {
+            log.info("No Credit entry created - paidAmount is: {}", inputInvoice.getPaidAmount());
         }
         if (inputInvoice.getDebtAmount().compareTo(BigDecimal.ZERO) > 0) {
             customer.setDebtAmount(customer.getDebtAmount().add(inputInvoice.getDebtAmount()));
@@ -199,7 +207,10 @@ public class InvoiceService {
         invoice.setUserId(request.getUserId());
         invoice.setTotalAmount(totalAmount);
         invoice.setPaidAmount(request.getPaidAmount());
-        BigDecimal newDebt = totalAmount.subtract(request.getPaidAmount());
+        if (invoice.getPaidAmount() == null) {
+            invoice.setPaidAmount(BigDecimal.ZERO);
+        }
+        BigDecimal newDebt = totalAmount.subtract(invoice.getPaidAmount());
         invoice.setDebtAmount(newDebt);
         BigDecimal debtDifference = newDebt.subtract(oldDebt);
         customer.setDebtAmount(customer.getDebtAmount().add(debtDifference));
@@ -207,9 +218,9 @@ public class InvoiceService {
         monthlyDebtReportDetailService.createMonthlyDebtReportDetail(
                 invoice.getUserId(), totalAmount, "Debit");
 
-        if (request.getPaidAmount().compareTo(BigDecimal.ZERO) > 0) {
+        if (invoice.getPaidAmount().compareTo(BigDecimal.ZERO) > 0) {
             monthlyDebtReportDetailService.createMonthlyDebtReportDetail(
-                    invoice.getUserId(), request.getPaidAmount(), "Credit");
+                    invoice.getUserId(), invoice.getPaidAmount(), "Credit");
         }
         return invoiceMapper.toInvoiceResponse(invoiceRepository.save(invoice));
     }

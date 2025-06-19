@@ -2,6 +2,7 @@
 import { api } from '@/plugins/axios'
 import { defineStore } from 'pinia'
 import { ref, reactive } from 'vue'
+import { useUser } from '@/data/user'
 
 export const useExportReceiptFormStore = defineStore('exportForm', () => {
   const receipts = ref([
@@ -37,8 +38,8 @@ export const useExportReceiptFormStore = defineStore('exportForm', () => {
     // }
   })
 
-  const loading= ref(false)
-  const error= ref(null)
+  const loading = ref(false)
+  const error = ref(null)
 
   async function fetchReceipts() {
     loading.value = true; error.value = null
@@ -46,10 +47,10 @@ export const useExportReceiptFormStore = defineStore('exportForm', () => {
       const { data } = await api.get('/invoices')
       const list = Array.isArray(data.result) ? data.result : []
       receipts.value = list.map(r => ({
-        id:    r.invoiceId,
+        id: r.invoiceId,
         admin: r.adminId,
         userId: r.userId,
-        date:  r.createAt,       // LocalDate như "2025-06-14"
+        date: r.createAt,       // LocalDate như "2025-06-14"
         total: r.totalAmount,       // BigDecimal
       }))
     } catch (e) {
@@ -67,17 +68,17 @@ export const useExportReceiptFormStore = defineStore('exportForm', () => {
       const r = data.result
       console.log("DEBUG invoice by id:", r)
       receiptDetails[id] = {
-        id:    r.invoiceId,
+        id: r.invoiceId,
         admin: r.adminId,
         userId: r.userId,
-        date:  r.createAt,
+        date: r.createAt,
         total: r.totalAmount,
         paidAmount: r.paidAmount,
         debtAmount: r.debtAmount,
         books: r.bookDetails.map(b => ({
-          id:           b.bookId,
-          title:        b.name,
-          quantity:     b.quantity,
+          id: b.bookId,
+          title: b.name,
+          quantity: b.quantity,
           import_price: b.importPrice
         }))
       }
@@ -96,6 +97,13 @@ export const useExportReceiptFormStore = defineStore('exportForm', () => {
       const { data } = await api.post('/invoices', { adminId, userId, paidAmount, bookDetails });
       await fetchReceipts();
       console.log('DEBUG data from API:', data.result)
+      // Refresh user debts so Payment Receipt form shows updated current debt
+      try {
+        const userStore = useUser();
+        await userStore.fetchUsers();
+      } catch (err) {
+        console.warn('[ExportReceipts] Failed to refresh users after invoice creation', err);
+      }
       return data.result;
     } catch (e) {
       console.error('[Invoice] create failed', e);
@@ -120,11 +128,18 @@ export const useExportReceiptFormStore = defineStore('exportForm', () => {
   async function updateExportReceiptForm(id, { adminId, userId, paidAmount, bookDetails }) {
     loading.value = true; error.value = null
     try {
-      const payload = {adminId, userId, paidAmount, bookDetails };
+      const payload = { adminId, userId, paidAmount, bookDetails };
       console.log('[DEBUG] Payload gửi PUT /invoice:', payload);
-      const { data } = await api.put(`/invoices/${id}`,  payload);
+      const { data } = await api.put(`/invoices/${id}`, payload);
       await fetchReceipts();
       console.log('DEBUG data from API:', data.result)
+      // Refresh user debts so Payment Receipt form shows updated current debt
+      try {
+        const userStore = useUser();
+        await userStore.fetchUsers();
+      } catch (err) {
+        console.warn('[ExportReceipts] Failed to refresh users after invoice update', err);
+      }
       return data.result;
     } catch (e) {
       console.error('[Invoice] update failed', e);

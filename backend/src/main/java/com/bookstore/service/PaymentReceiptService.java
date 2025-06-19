@@ -107,8 +107,9 @@ public class PaymentReceiptService {
             user.setDebtAmount(newDebt);
             userRepository.save(user);
             // Update monthly debt report (reduce debtPayment)
-            LocalDate month = paymentReceipt.getCreateAt() != null ? paymentReceipt.getCreateAt().withDayOfMonth(1)
-                    : LocalDate.now().withDayOfMonth(1);
+            LocalDate month = paymentReceipt.getCreateAt() != null
+                    ? paymentReceipt.getCreateAt().withDayOfMonth(paymentReceipt.getCreateAt().lengthOfMonth())
+                    : LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth());
             MonthlyDebtReports report = monthlyDebtReportRepository
                     .findByUserIdAndReportMonth(user.getId(), month)
                     .orElse(null);

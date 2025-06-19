@@ -47,7 +47,7 @@ const paymentAmount = ref('')
 const customersWithDebt = computed(() => {
   return userStore.users.map(user => ({
     ...user,
-    debtAmount: `${user.debtAmount} VND`,
+    debtAmount: user.debtAmount != null ? user.debtAmount.toLocaleString() + ' VND' : '0 VND',
   }))
 })
 
@@ -124,6 +124,7 @@ const handleDeleteReceipt = async (receipt) => {
           <div class="action-bar">
             <div class="frame-wrapper">
               <TitleFrame readonly placeholder="Name" :modelValue="selectedCustomer?.name || ''" />
+              <TitleFrame readonly placeholder="Debt" :modelValue="selectedCustomer?.debtAmount || '0 VND'" />
               <ReceiptFormFrame placeholder="Amount" v-model="paymentAmount" />
               <ButtonCRUD @click="handlePayment">
                 <template #btn-text>
