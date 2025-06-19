@@ -51,6 +51,9 @@ public class Books {
     @Column(name = "import_price")
     BigDecimal importPrice;
 
+    @Column(name = "sell_price")
+    BigDecimal sellPrice;
+
     @Column(name = "quantity")
     Integer quantity;
 

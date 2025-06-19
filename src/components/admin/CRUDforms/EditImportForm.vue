@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useImportReceiptFormStore } from '@/data/importReceipts.js'
 import { useRegulation } from '@/data/regulation.js'
+import { useBook } from '@/data/book.js'
 import CRUDMainForm from './CRUDMainForm.vue'
 import TitleText from '../texts/TitleText.vue'
 import BookTable from '../tables/BookTable.vue'
@@ -38,6 +39,7 @@ const quantity = ref('')
 const importPrice = ref('')
 const store = useImportReceiptFormStore()
 const { regulations, fetchRegulations } = useRegulation()
+const bookStore = useBook()
 
 onMounted(async () => {
   await fetchRegulations()
@@ -152,10 +154,12 @@ async function handleSave() {
         payload
       );
     }
+    await bookStore.fetchBooks()
     emit('close');
   } catch (error) {
-    console.error('Save failed:', error);
-    showValidationDialog('Save Failed', 'Failed to save the import receipt. Please try again.');
+    console.error('Save failed:', error.response ? error.response.data : error.message);
+    const errorMessage = error.response?.data?.message || 'An unexpected error occurred. Please try again.';
+    showValidationDialog('Save Failed', errorMessage);
   }
 }
 </script>

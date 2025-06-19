@@ -82,16 +82,25 @@ public class ImportReceiptService {
         BigDecimal totalAmount = BigDecimal.ZERO;
 
         for (BookUpdateRequest inputBookRequest : inputBooks) {
+            Books inputBook = bookRepository.findById(inputBookRequest.getBookId())
+                    .orElseThrow(() -> new AppException(ErrorCode.BOOK_NOT_EXISTED));
+
+            // Update import price and sell price
+            BigDecimal newImportPrice = inputBookRequest.getImportPrice();
+            inputBook.setImportPrice(newImportPrice);
+            inputBook.setSellPrice(newImportPrice.multiply(new BigDecimal("1.05")));
+            bookRepository.save(inputBook);
+
             bookService.updateBook(inputBookRequest.getBookId(), inputBookRequest);
-            Books inputBook = bookRepository.findById(inputBookRequest.getBookId()).orElse(null);
+
             BooksImportReceipts booksImportReceipt = new BooksImportReceipts();
             booksImportReceipt.setBook(inputBook);
             booksImportReceipt.setImportReceipt(importReceipt);
-            BigDecimal lineAmount = inputBookRequest.getImportPrice()
+            BigDecimal lineAmount = newImportPrice
                     .multiply(BigDecimal.valueOf(inputBookRequest.getQuantity()));
             totalAmount = totalAmount.add(lineAmount);
             booksImportReceipt.setQuantity(inputBookRequest.getQuantity());
-            booksImportReceipt.setImportPrice(inputBookRequest.getImportPrice());
+            booksImportReceipt.setImportPrice(newImportPrice);
 
             booksImportReceiptsSet.add(booksImportReceipt);
         }
@@ -128,14 +137,12 @@ public class ImportReceiptService {
         Map<Integer, BooksImportReceipts> existingBookDetailsMap = importReceipt.getBookDetails().stream()
                 .collect(Collectors.toMap(
                         b -> b.getBook().getBookId(),
-                        b -> b
-                ));
+                        b -> b));
 
         Map<Integer, Integer> oldQuantityMap = importReceipt.getBookDetails().stream()
                 .collect(Collectors.toMap(
                         b -> b.getBook().getBookId(),
-                        BooksImportReceipts::getQuantity
-                ));
+                        BooksImportReceipts::getQuantity));
 
         Set<Integer> processedBookIds = new HashSet<>();
 
@@ -143,22 +150,32 @@ public class ImportReceiptService {
             int newQuantity = inputBookRequest.getQuantity();
             int oldQuantity = oldQuantityMap.getOrDefault(inputBookRequest.getBookId(), 0);
             int quantityDiff = newQuantity - oldQuantity;
+
+            // Update prices in the book entity itself
+            Books bookToUpdate = bookRepository.findById(inputBookRequest.getBookId())
+                    .orElseThrow(() -> new AppException(ErrorCode.BOOK_NOT_EXISTED));
+            BigDecimal newImportPrice = inputBookRequest.getImportPrice();
+            bookToUpdate.setImportPrice(newImportPrice);
+            bookToUpdate.setSellPrice(newImportPrice.multiply(new BigDecimal("1.05")));
+            bookRepository.save(bookToUpdate);
+
+            // Update quantity
             int originalQuantity = inputBookRequest.getQuantity();
             inputBookRequest.setQuantity(quantityDiff);
             bookService.updateBook(inputBookRequest.getBookId(), inputBookRequest);
             inputBookRequest.setQuantity(originalQuantity);
+
             BooksImportReceipts booksImportReceipt = existingBookDetailsMap.get(inputBookRequest.getBookId());
 
             if (booksImportReceipt != null) {
                 booksImportReceipt.setQuantity(newQuantity);
-                booksImportReceipt.setImportPrice(inputBookRequest.getImportPrice());
+                booksImportReceipt.setImportPrice(newImportPrice);
             } else {
-                Books inputBook = bookRepository.findById(inputBookRequest.getBookId()).orElse(null);
                 booksImportReceipt = new BooksImportReceipts();
-                booksImportReceipt.setBook(inputBook);
+                booksImportReceipt.setBook(bookToUpdate);
                 booksImportReceipt.setImportReceipt(importReceipt);
                 booksImportReceipt.setQuantity(newQuantity);
-                booksImportReceipt.setImportPrice(inputBookRequest.getImportPrice());
+                booksImportReceipt.setImportPrice(newImportPrice);
                 importReceipt.getBookDetails().add(booksImportReceipt);
             }
 
@@ -173,9 +190,7 @@ public class ImportReceiptService {
             int quantityToSubtract = -itemToRemove.getQuantity(); // Số âm để trừ
             bookService.updateBookQuantity(itemToRemove.getBook().getBookId(), quantityToSubtract);
         }
-        importReceipt.getBookDetails().removeIf(detail ->
-                !processedBookIds.contains(detail.getBook().getBookId())
-        );
+        importReceipt.getBookDetails().removeIf(detail -> !processedBookIds.contains(detail.getBook().getBookId()));
         BigDecimal totalAmount = importReceipt.getBookDetails().stream()
                 .map(detail -> detail.getImportPrice().multiply(BigDecimal.valueOf(detail.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
