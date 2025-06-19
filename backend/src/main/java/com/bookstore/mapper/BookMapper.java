@@ -28,6 +28,7 @@ public abstract class BookMapper {
     // @Mapping(target = "categories", ignore = true)
     // Books toBook(BookUpdateRequest request);
 
+    @Mapping(target = "importPrice", expression = "java(book.getImportPrice())")
     @Mapping(target = "sellPrice", expression = "java(calculateSellPrice(book.getImportPrice()))")
     public abstract BookResponse toBookResponse(Books book);
 

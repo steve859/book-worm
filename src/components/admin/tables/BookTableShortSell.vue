@@ -4,7 +4,6 @@ import { useBook } from '@/data/book'
 import { storeToRefs } from 'pinia'
 
 const bookStore = useBook()
-// Use storeToRefs to maintain reactivity when destructuring
 const { items, fullBookDetails } = storeToRefs(bookStore)
 
 const props = defineProps({
@@ -14,30 +13,17 @@ const props = defineProps({
   }
 })
 
-// Debug: Watch for changes in items
-watch(items, (newBooks, oldBooks) => {
-  console.log('[BookTableShort] items changed from', oldBooks?.length, 'to', newBooks?.length)
-}, { immediate: true })
-
-// Debug: Watch for changes in excludedBookIds
-watch(() => props.excludedBookIds, (newExcluded, oldExcluded) => {
-  console.log('[BookTableShort] excludedBookIds changed from', oldExcluded?.length, 'to', newExcluded?.length)
+watch(items, (n, o) => {
+  console.log('[BookTableShortSell] items changed', o?.length, '=>', n?.length)
 }, { immediate: true })
 
 const emit = defineEmits(['select-book'])
 
-// Filter out excluded books
 const filteredItems = computed(() =>
   items.value.filter(item => !props.excludedBookIds.includes(item.id))
 )
 
-const dialog = ref(false)
-
-const onRowClick = (bookRow) => {
-  // Emit the book object from the row directly.
-  // This object contains all necessary info including 'import_price'.
-  emit('select-book', bookRow);
-}
+const onRowClick = (row) => emit('select-book', row)
 
 const headers = [
   { title: 'ID', key: 'id' },
@@ -46,7 +32,7 @@ const headers = [
   { title: 'Published Year', key: 'publishedYear' },
   { title: 'Categories', key: 'categories' },
   { title: 'Quantity', key: 'quantity' },
-  { title: 'Import Price', key: 'import_price' }
+  { title: 'Sell Price', key: 'export_price' }
 ]
 </script>
 
@@ -62,16 +48,8 @@ const headers = [
           <td>{{ item.publishedYear }}</td>
           <td>{{ fullBookDetails[item.id]?.categories?.join(', ') }}</td>
           <td>{{ item.quantity }}</td>
-          <td>{{ item.import_price }}</td>
+          <td>{{ item.export_price }}</td>
         </tr>
-      </template>
-
-      <template #item.categories="{ item }">
-        <span>{{ fullBookDetails[item.id]?.categories?.join(', ') }}</span>
-      </template>
-
-      <template #item.authors="{ item }">
-        <span>{{ fullBookDetails[item.id]?.authors?.join(', ') }}</span>
       </template>
     </v-data-table>
   </div>
@@ -99,9 +77,7 @@ const headers = [
   color: var(--vt-c-second-bg-color) !important;
 }
 
-/* Hover effect for clickable rows */
 ::v-deep(.v-data-table tbody tr:hover) {
   background-color: var(--vt-c-gradient-bg-color) !important;
-  cursor: pointer;
 }
 </style>

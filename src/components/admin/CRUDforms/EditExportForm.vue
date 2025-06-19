@@ -3,7 +3,7 @@ import { ref, watch } from 'vue'
 import { useExportReceiptFormStore } from '@/data/exportReceipts.js'
 import CRUDMainForm from './CRUDMainForm.vue'
 import TitleText from '../texts/TitleText.vue'
-import BookTableShort from '../tables/BookTableShort.vue'
+import BookTableShortSell from '../tables/BookTableShortSell.vue'
 import TitleFrame from '../frames/TitleFrame.vue'
 import ReceiptFormFrame from '../frames/ReceiptFormFrame.vue'
 import ButtonReceipt from '../buttons/ButtonReceipt.vue'
@@ -137,7 +137,8 @@ async function handleSave() {
     </template>
     <template #content>
       <div class="scrollable-content">
-        <BookTableShort @select-book="handleSelectBook" :excludedBookIds="exportReceipt.books.map(book => book.id)" />
+        <BookTableShortSell @select-book="handleSelectBook"
+          :excludedBookIds="exportReceipt.books.map(book => book.id)" />
 
         <div class="frame-wrapper">
           <TitleFrame readonly :modelValue="selectedBook?.title || ''" disabled placeholder="Title" />
