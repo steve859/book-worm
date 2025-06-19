@@ -33,7 +33,9 @@ public enum ErrorCode {
     MONTHLY_INVENTORY_REPORT_DETAIL_NOT_EXISTED(1023, "Monthly inventory report detail not existed",
             HttpStatus.NOT_FOUND),
     BOOK_HAS_IMPORT_RECEIPTS(1024, "Cannot delete book - has import receipt references", HttpStatus.BAD_REQUEST),
-    BOOK_DELETE_FAILED(1025, "Failed to delete book due to constraints", HttpStatus.BAD_REQUEST);
+    BOOK_DELETE_FAILED(1025, "Failed to delete book due to constraints", HttpStatus.BAD_REQUEST),
+    PARTIAL_PAYMENT_NOT_ALLOWED(1026, "Partial payment is not allowed", HttpStatus.BAD_REQUEST),
+    PAYMENT_EXCEEDS_DEBT(1027, "Payment amount exceeds current debt", HttpStatus.BAD_REQUEST);
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;
