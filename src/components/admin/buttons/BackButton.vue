@@ -1,30 +1,28 @@
+<script setup>
+import BackIcon from '@/assets/icons-vue/back.vue'
+</script>
+
 <template>
-    <div class="btn">
-        <slot name="btn-icon"></slot>
-    </div>
+  <button class="button">
+    <BackIcon />
+  </button>
 </template>
 
 <style scoped>
-    .btn {
-        width: 32px;
-        height: 32px;
-        flex-shrink: 0;
-        justify-content: center;
-        align-items: center;
-        background-color: var(--vt-c-main-bg-color);
-        border-radius: 10px;
-        border: 1px solid var(--vt-c-second-bg-color);
-        display: flex;
-        padding-right: 1px;
-    }
+.button {
+  background-color: var(--vt-c-main-bg-color);
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid #e0e0e0;
+  transition: background-color 0.2s;
+}
 
-    .btn:hover {
-        border: 1px solid var(--vt-c-second-bg-color);
-        background: var(--vt-c-main-color); 
-        letter-spacing: 0.3px;
-        cursor: pointer;
-    }
-    .btn:hover ::v-deep(.text) {  
-        color: var(--vt-c-second-bg-color);
-    }
+.button:hover {
+  background-color: #f0f0f0;
+}
 </style>
