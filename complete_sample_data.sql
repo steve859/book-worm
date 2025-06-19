@@ -64,16 +64,16 @@ VALUES (
 -- ============================================================================
 -- 2. ROLES (2 roles)
 -- ============================================================================
-INSERT INTO
-    roles (role_name, role_description)
-VALUES (
-        'ADMIN',
-        'Administrator with full access'
-    ),
-    (
-        'USER',
-        'Regular user with limited access'
-    );
+--  INSERT INTO
+--     roles (role_name, role_description)
+-- VALUES (
+--         'ADMIN',
+--         'Administrator with full access'
+--     ),
+--     (
+--         'USER',
+--         'Regular user with limited access'
+--     );
 
 -- ============================================================================
 -- 3. ROLES_PERMISSIONS (Many-to-Many relationship)
@@ -136,18 +136,18 @@ VALUES
         '1990-01-01',
         0.00
     ),
-    -- Admin user (ID: admin-001)
-    (
-        'admin',
-        'admin',
-        '$10$H9LSTLTInv9Ydetf6Wjf1.hInmxD2m57exCLcoL48aonpdV5qJ8sq',
-        'System',
-        'Administrator2',
-        'admin2@bookstore.com',
-        '0901222567',
-        '1990-01-02',
-        0.00
-    ),
+    --     -- Admin user (ID: admin-001)
+    --     (
+    --         'admin',
+    --         'admin',
+    --         '$10$H9LSTLTInv9Ydetf6Wjf1.hInmxD2m57exCLcoL48aonpdV5qJ8sq',
+    --         'System',
+    --         'Administrator2',
+    --         'admin2@bookstore.com',
+    --         '0901222567',
+    --         '1990-01-02',
+    --         0.00
+    --     ),
     -- Regular users (ID: user-001 to user-009)
     (
         'user-001',
