@@ -1,6 +1,7 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useImportReceiptFormStore } from '@/data/importReceipts.js'
+import { useRegulation } from '@/data/regulation.js'
 import CRUDMainForm from './CRUDMainForm.vue'
 import TitleText from '../texts/TitleText.vue'
 import BookTable from '../tables/BookTable.vue'
@@ -9,6 +10,7 @@ import TitleFrame from '../frames/TitleFrame.vue'
 import ReceiptFormFrame from '../frames/ReceiptFormFrame.vue'
 import ButtonReceipt from '../buttons/ButtonReceipt.vue'
 import ButtonText from '../texts/ButtonText.vue'
+import AppDialog from '../AppDialog.vue'
 
 import BookInReceiptTable from '../tables/BookInReceiptTable.vue'
 
@@ -21,6 +23,11 @@ const props = defineProps({
 const emit = defineEmits(['close'])
 const selectedBook = ref(null);
 
+// Dialog states
+const dialogVisible = ref(false)
+const dialogTitle = ref('')
+const dialogMessage = ref('')
+
 const handleSelectBook = (book) => {
   selectedBook.value = book;
 };
@@ -28,10 +35,49 @@ const handleSelectBook = (book) => {
 const quantity = ref('')
 const importPrice = ref('')
 const store = useImportReceiptFormStore()
+const { regulations, fetchRegulations } = useRegulation()
+
+onMounted(async () => {
+  await fetchRegulations()
+})
 
 const addBookToReceipt = () => {
-  if (!selectedBook.value || !quantity.value || !importPrice.value) return;
+  // Validation logic
+  if (!selectedBook.value) {
+    showValidationDialog('Missing Book Selection', 'Please select a book before adding to receipt.')
+    return;
+  }
 
+  if (!quantity.value || quantity.value <= 0) {
+    showValidationDialog('Invalid Quantity', 'Please enter a valid quantity (greater than 0).')
+    return;
+  }
+
+  if (!importPrice.value || importPrice.value <= 0) {
+    showValidationDialog('Invalid Import Price', 'Please enter a valid import price (greater than 0).')
+    return;
+  }
+
+  // Business rule validation: minimum import quantity
+  if (regulations.value.minImportQuantity && parseInt(quantity.value) < regulations.value.minImportQuantity) {
+    showValidationDialog('Quantity Below Minimum', `Quantity must be at least ${regulations.value.minImportQuantity} according to store regulations.`)
+    return;
+  }
+
+  // Business rule validation: minimum stock before import
+  if (regulations.value.minStockBeforeImport && selectedBook.value.quantity >= regulations.value.minStockBeforeImport) {
+    showValidationDialog('Stock Above Threshold', `This book has ${selectedBook.value.quantity} in stock. Import is only allowed when stock is below ${regulations.value.minStockBeforeImport}.`)
+    return;
+  }
+
+  // Check if book already exists in receipt
+  const existingBook = props.importReceipt.books.find(b => b.id === selectedBook.value.id)
+  if (existingBook) {
+    showValidationDialog('Duplicate Book', 'This book is already in the receipt. Please select a different book.')
+    return;
+  }
+
+  // If all validations pass, add the book
   const newBook = {
     ...selectedBook.value,
     quantity: parseInt(quantity.value),
@@ -40,9 +86,16 @@ const addBookToReceipt = () => {
 
   props.importReceipt.books.push(newBook);
 
+  // Clear form after successful addition
   selectedBook.value = null;
   quantity.value = '';
   importPrice.value = '';
+}
+
+function showValidationDialog(title, message) {
+  dialogTitle.value = title
+  dialogMessage.value = message
+  dialogVisible.value = true
 }
 
 function deleteBookInReceipt(book) {
@@ -52,6 +105,12 @@ function deleteBookInReceipt(book) {
 }
 
 async function handleSave() {
+  // Validate before saving
+  if (!props.importReceipt.books || props.importReceipt.books.length === 0) {
+    showValidationDialog('Empty Receipt', 'Please add at least one book to the receipt before saving.')
+    return;
+  }
+
   // Chuyển đổi books -> bookDetails theo đúng yêu cầu backend
   const bookDetails = (props.importReceipt.books || []).map(b => ({
     bookId: b.bookId || b.id,
@@ -70,19 +129,23 @@ async function handleSave() {
   };
   console.log('Payload gửi lên:', payload);
 
-  if (!props.importReceipt.id && !props.importReceipt.importReceiptId) {
-    // Add mới
-    await store.createReceipt(payload);
-  } else {
-    // Update
-    await store.updateReceipt(
-      props.importReceipt.id || props.importReceipt.importReceiptId,
-      payload
-    );
+  try {
+    if (!props.importReceipt.id && !props.importReceipt.importReceiptId) {
+      // Add mới
+      await store.createReceipt(payload);
+    } else {
+      // Update
+      await store.updateReceipt(
+        props.importReceipt.id || props.importReceipt.importReceiptId,
+        payload
+      );
+    }
+    emit('close');
+  } catch (error) {
+    console.error('Save failed:', error);
+    showValidationDialog('Save Failed', 'Failed to save the import receipt. Please try again.');
   }
-  emit('close');
 }
-
 </script>
 <template>
   <CRUDMainForm @close="emit('close')">
@@ -122,8 +185,22 @@ async function handleSave() {
       </div>
     </template>
   </CRUDMainForm>
+
+  <!-- Validation Dialog -->
+  <AppDialog
+    v-model="dialogVisible"
+    :title="dialogTitle"
+    :message="dialogMessage"
+    :showCancel="false"
+  />
 </template>
 <style scoped>
+.scrollable-content {
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+  padding-right: 12px;
+}
+
 .frame-wrapper {
   display: flex;
   flex-direction: row;

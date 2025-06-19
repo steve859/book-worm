@@ -1,7 +1,7 @@
 <script setup>
-import { ref } from 'vue'
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import DeleteIcon from '@/assets/icons-vue/trash.vue'
+import AppDialog from '../AppDialog.vue'
 
 const props = defineProps({
   books: {
@@ -14,18 +14,26 @@ const props = defineProps({
   }
 })
 
-const dialog = ref(false)
-const bookToDelete = ref(null)
 const emit = defineEmits(['delete-book'])
+
+// Dialog state
+const dialogVisible = ref(false)
+const dialogTitle = ref('')
+const dialogMessage = ref('')
+const bookToDelete = ref(null)
 
 const openDeleteDialog = (book) => {
   bookToDelete.value = book
-  dialog.value = true
+  dialogTitle.value = 'Confirm Deletion'
+  dialogMessage.value = `Are you sure you want to delete the book <strong>${book.title}</strong> from this receipt?`
+  dialogVisible.value = true
 }
 
 const confirmDelete = () => {
-  emit('delete-book', bookToDelete.value)
-  dialog.value = false
+  if (bookToDelete.value) {
+    emit('delete-book', bookToDelete.value)
+  }
+  dialogVisible.value = false
   bookToDelete.value = null
 }
 
@@ -34,12 +42,12 @@ const headers = computed(() => [
   { title: 'Title', key: 'title' },
   { title: 'Quantity', key: 'quantity' },
   { title: 'Import Price', key: 'import_price' },
-  { title: 'Action', key: 'action', sortable: false },
+  { title: 'Action', key: 'action', sortable: false, align: 'center' },
 ])
 </script>
 
 <template>
-  <v-container fluid>
+  <div class="table-container">
     <v-data-table
       :headers="headers"
       :items="books"
@@ -51,44 +59,53 @@ const headers = computed(() => [
       <template v-if="props.showActions" #item.action="{ item }">
         <div class="action-icons">
           <v-tooltip text="Delete" location="top">
-            <template #activator="{ props }">
-              <div v-bind="props" @click="openDeleteDialog(item)" style="cursor: pointer;">
+            <template #activator="{ props: tooltipProps }">
+              <div v-bind="tooltipProps" @click="openDeleteDialog(item)" style="cursor: pointer;">
                 <DeleteIcon />
               </div>
             </template>
           </v-tooltip>
         </div>
       </template>
-
     </v-data-table>
     
-    <v-dialog v-model="dialog" width="400" class="delete-dialog" persistent scroll-strategy="block">
-      <v-card>
-        <v-card-title class="text-h6">Confirm Deletion</v-card-title>
-        <v-card-text>
-          Are you sure you want to delete the book
-          <strong>{{ bookToDelete?.title }}</strong>?
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn color="grey" variant="text" @click="dialog = false">Cancel</v-btn>
-          <v-btn color="var(--vt-c-second-bg-color)" variant="tonal" @click="confirmDelete">Delete</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-  </v-container>
+    <AppDialog 
+      v-model="dialogVisible"
+      :title="dialogTitle"
+      :message="dialogMessage"
+      @confirm="confirmDelete"
+      :show-cancel="true"
+    />
+  </div>
 </template>
 
 <style scoped>
+.table-container {
+  width: 100%;
+}
+
 .v-data-table {
   background-color: var(--vt-c-main-bg-color);
   border-radius: 12px;
   padding: 12px;
   font-family: Montserrat;
   font-size: 15px;
-  font-style: normal;
-  font-weight: 500;
-  line-height: 140%;
   color: var(--vt-c-second-bg-color);
+}
+
+::v-deep(.v-data-table__th) {
+  background-color: var(--vt-c-main-bg-color) !important;
+  color: var(--vt-c-second-bg-color) !important;
+  font-weight: 600 !important;
+}
+
+::v-deep(.v-data-table-header__sort-btn) {
+  color: var(--vt-c-second-bg-color) !important;
+}
+
+.action-icons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
 }
 </style>
