@@ -183,7 +183,7 @@ function closeEdit() {
       </div>
 
       <BookTable ref="bookTable" :filteredItems="filteredBooks" @view-book="handleViewBook" @edit-book="handleEditBook"
-        @delete-book="deleteBook" />
+        @delete-book="deleteBook" :show-price="false" />
 
       <ButtonCRUD @click="handleAddBook" style="margin-top: 20px;">
         <template #btn-text>

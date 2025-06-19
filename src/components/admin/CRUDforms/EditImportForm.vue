@@ -31,7 +31,7 @@ const dialogMessage = ref('')
 const handleSelectBook = (book) => {
   selectedBook.value = book;
   // Automatically bind the import price from the selected book
-  importPrice.value = book.import_price || '';
+  // importPrice.value = book.import_price || '';
 };
 
 const quantity = ref('')
@@ -199,12 +199,7 @@ async function handleSave() {
   </CRUDMainForm>
 
   <!-- Validation Dialog -->
-  <AppDialog
-    v-model="dialogVisible"
-    :title="dialogTitle"
-    :message="dialogMessage"
-    :showCancel="false"
-  />
+  <AppDialog v-model="dialogVisible" :title="dialogTitle" :message="dialogMessage" :showCancel="false" />
 </template>
 <style scoped>
 .scrollable-content {
