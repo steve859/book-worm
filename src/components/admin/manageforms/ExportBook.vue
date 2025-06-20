@@ -12,6 +12,7 @@ import ExportReceiptTable from '../tables/ExportReceiptTable.vue';
 import ButtonText from '../texts/ButtonText.vue';
 import TitleText from '../texts/TitleText.vue';
 import AppDialog from '../AppDialog.vue';
+import ViewExportForm from '@/components/admin/CRUDforms/ViewExportForm.vue'
 
 const router = useRouter()
 const store = useExportReceiptFormStore()
@@ -96,7 +97,15 @@ async function deleteReceipt(receipts) {
     showErrorDialog(message)
   }
 }
+const viewingReceipt = ref(null);
 
+async function handleViewReceipt(item) {
+  const detail = await store.fetchReceiptById(item.id)
+  viewingReceipt.value = { ...detail }
+}
+function closeViewForm() {
+  viewingReceipt.value = null
+}
 function closeEditForm() {
   editingReceipt.value = null
 }
@@ -111,14 +120,14 @@ function closeErrorDialog() {
 </script>
 
 <template>
-  <div v-if="!editingReceipt" class="detail-wrapper">
+  <div v-if="!editingReceipt && !viewingReceipt" class="detail-wrapper">
     <CRUDMainForm @close="goBack">
       <template #title>
         <TitleText><template #text>Invoices</template></TitleText>
       </template>
       <template #content>
         <div class="scrollable-content">
-          <ExportReceiptTable :receipts="exportReceiptList" @edit-receipt="handleEdit"
+          <ExportReceiptTable :receipts="exportReceiptList" @view-receipt="handleViewReceipt" @edit-receipt="handleEdit"
             @delete-receipt="deleteReceipt" />
           <div class="action-bar">
             <SelectFrame v-model="selectedCustomer" :options="userStore.users" option-label-key="name"
@@ -134,7 +143,12 @@ function closeErrorDialog() {
     </CRUDMainForm>
   </div>
 
-  <div v-else class="detail-wrapper">
+
+  <div v-else-if="viewingReceipt" class="detail-wrapper">
+    <ViewExportForm :exportReceipt="viewingReceipt" @close="closeViewForm" />
+  </div>
+
+  <div v-else-if="editingReceipt" class="detail-wrapper">
     <EditExportForm :exportReceipt="editingReceipt" @close="closeEditForm" />
   </div>
 

@@ -142,6 +142,7 @@ async function handleSave() {
           :excludedBookIds="exportReceipt.books.map(book => book.id)" />
 
         <div class="frame-wrapper">
+          <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
           <TitleFrame readonly :modelValue="selectedBook?.title || ''" disabled placeholder="Title" />
           <ReceiptFormFrame v-model="quantity" placeholder="Quantity" />
           <ButtonReceipt @click="addBookToReceipt">
@@ -149,10 +150,11 @@ async function handleSave() {
               <ButtonText><template #text>ADD</template></ButtonText>
             </template>
           </ButtonReceipt>
+          </div>
         </div>
 
         <BookOutReceiptTable :books="exportReceipt.books" :customer="exportReceipt.customer"
-          @delete-book="handleDeleteBook" />
+          @delete-book="handleDeleteBook " />
         <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
           <div style="font-family: Montserrat; color: var(--vt-c-second-bg-color); font-size: 16px; font-weight: 600;">
             Total: {{ totalAmount.toLocaleString() }} VND

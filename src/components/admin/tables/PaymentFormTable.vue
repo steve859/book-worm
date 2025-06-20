@@ -80,4 +80,7 @@ const selected = computed({
   color: #d32f2f;
   font-weight: bold;
 }
+::v-deep(.v-data-table tbody tr:hover) {
+  background-color: var(--vt-c-gradient-bg-color) !important;
+}
 </style>

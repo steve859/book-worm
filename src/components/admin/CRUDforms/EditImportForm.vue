@@ -175,6 +175,7 @@ async function handleSave() {
         <BookTableShort @select-book="handleSelectBook" :excludedBookIds="importReceipt.books.map(book => book.id)" />
 
         <div class="frame-wrapper">
+          <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
           <TitleFrame readonly :modelValue="selectedBook?.title || ''" disabled placeholder="Title" />
           <ReceiptFormFrame v-model="quantity" placeholder="Quantity" />
           <ReceiptFormFrame v-model="importPrice" placeholder="Import Price" />
@@ -184,9 +185,11 @@ async function handleSave() {
               <ButtonText><template #text>ADD</template></ButtonText>
             </template>
           </ButtonReceipt>
+          </div>
         </div>
-
+        <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
         <BookInReceiptTable :books="importReceipt.books" @delete-book="deleteBookInReceipt" />
+        </div>
         <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
           <ButtonReceipt @click="handleSave">
             <template #btn-text>

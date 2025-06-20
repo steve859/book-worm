@@ -54,6 +54,13 @@ const headers = [
       </template>
       <template #item.action="{ item }">
         <div class="action-icons">
+          <v-tooltip text="View" location="top">
+            <template #activator="{ props }">
+              <div v-bind="props" @click="$emit('view-receipt', item)" style="cursor: pointer;">
+                <ViewIcon />
+              </div>
+            </template>
+          </v-tooltip>
 
           <v-tooltip text="Edit" location="top">
             <template #activator="{ props }">
