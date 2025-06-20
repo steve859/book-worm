@@ -37,7 +37,7 @@ const headers = computed(() => [
   { title: 'ID', key: 'id' },
   { title: 'Title', key: 'title' },
   { title: 'Quantity', key: 'quantity' },
-  { title: 'Export Price', key: 'export_price' },
+  { title: 'Sell Price', key: 'sellPrice' },
   { title: 'Action', key: 'action', sortable: false },
 ])
 </script>
@@ -50,6 +50,12 @@ const headers = computed(() => [
 
     <v-data-table :headers="headers" :items="books" class="elevation-1" item-value="id" :items-per-page="-1"
       hide-default-footer>
+
+      <!-- Format sell price with VND currency -->
+      <template #item.sellPrice="{ item }">
+        <span>{{ (item.sellPrice || 0).toLocaleString() }} VND</span>
+      </template>
+
       <template v-if="props.showActions" #item.action="{ item }">
         <div class="action-icons">
           <v-tooltip text="Delete" location="top">

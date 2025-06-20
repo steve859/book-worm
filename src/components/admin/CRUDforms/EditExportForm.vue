@@ -26,11 +26,16 @@ const totalAmount = computed(() => {
   if (!props.exportReceipt.books || props.exportReceipt.books.length === 0) {
     return 0
   }
-  return props.exportReceipt.books.reduce((total, book) => {
-    const price = book.export_price || book.sellPrice || 0
+  const total = props.exportReceipt.books.reduce((total, book) => {
+    // Prioritize sellPrice, fallback to export_price for backward compatibility
+    const price = book.sellPrice || book.export_price || 0
     const quantity = book.quantity || 0
-    return total + (price * quantity)
+    const bookTotal = price * quantity
+    console.log(`[EditExportForm] Book: ${book.title}, Price: ${price}, Qty: ${quantity}, Subtotal: ${bookTotal}`)
+    return total + bookTotal
   }, 0)
+  console.log(`[EditExportForm] Total calculated: ${total}`)
+  return total
 })
 
 const dialogVisible = ref(false)
@@ -47,6 +52,22 @@ function showValidationDialog(title, message) {
 if (!props.exportReceipt.books) {
   props.exportReceipt.books = []
 }
+
+// Normalize existing books to have sellPrice property
+props.exportReceipt.books.forEach(book => {
+  if (!book.sellPrice && !book.export_price) {
+    // If no price is set, calculate from import price
+    const importPrice = book.import_price || book.importPrice || 0
+    book.sellPrice = Math.round(importPrice * 1.05)
+    book.export_price = book.sellPrice // backward compatibility
+  } else if (!book.sellPrice && book.export_price) {
+    // If only export_price exists, use it as sellPrice
+    book.sellPrice = book.export_price
+  } else if (book.sellPrice && !book.export_price) {
+    // If only sellPrice exists, set export_price for compatibility
+    book.export_price = book.sellPrice
+  }
+})
 
 const store = useExportReceiptFormStore()
 
@@ -71,9 +92,18 @@ const addBookToReceipt = () => {
     return
   }
 
+  // Calculate sell price (import price * 1.05 markup)
+  const importPrice = selectedBook.value.import_price || selectedBook.value.importPrice || 0
+  const sellPrice = Math.round(importPrice * 1.05)
+
+  console.log(`[EditExportForm] Adding book "${selectedBook.value.title}" - Import: ${importPrice}, Sell: ${sellPrice}`)
+
   const newBook = {
     ...selectedBook.value,
-    quantity: parseInt(quantity.value)
+    quantity: parseInt(quantity.value),
+    sellPrice: sellPrice,
+    // Keep backward compatibility
+    export_price: sellPrice
   }
   props.exportReceipt.books.push(newBook)
   selectedBook.value = null
@@ -143,18 +173,18 @@ async function handleSave() {
 
         <div class="frame-wrapper">
           <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
-          <TitleFrame readonly :modelValue="selectedBook?.title || ''" disabled placeholder="Title" />
-          <ReceiptFormFrame v-model="quantity" placeholder="Quantity" />
-          <ButtonReceipt @click="addBookToReceipt">
-            <template #btn-text>
-              <ButtonText><template #text>ADD</template></ButtonText>
-            </template>
-          </ButtonReceipt>
+            <TitleFrame readonly :modelValue="selectedBook?.title || ''" disabled placeholder="Title" />
+            <ReceiptFormFrame v-model="quantity" placeholder="Quantity" />
+            <ButtonReceipt @click="addBookToReceipt">
+              <template #btn-text>
+                <ButtonText><template #text>ADD</template></ButtonText>
+              </template>
+            </ButtonReceipt>
           </div>
         </div>
 
         <BookOutReceiptTable :books="exportReceipt.books" :customer="exportReceipt.customer"
-          @delete-book="handleDeleteBook " />
+          @delete-book="handleDeleteBook" />
         <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
           <div style="font-family: Montserrat; color: var(--vt-c-second-bg-color); font-size: 16px; font-weight: 600;">
             Total: {{ totalAmount.toLocaleString() }} VND
