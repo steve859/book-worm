@@ -3,6 +3,7 @@ package com.bookstore.service;
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -44,6 +45,7 @@ public class UserService {
     RoleRepository roleRepository;
     IdGeneratorService idGeneratorService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     public UserResponse createUser(UserCreationRequest request) {
         if (userRepository.existsByUsername(request.getUsername()))
             throw new AppException(ErrorCode.USER_EXISTED);
@@ -80,10 +82,14 @@ public class UserService {
         return userMapper.toUserResponse(userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found")));
     }
-
+    @PreAuthorize("hasRole('ADMIN')")
     public UserResponse updateUser(String userId, UserUpdateRequest req) {
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        if(req.getUsername() != null && !req.getUsername().isBlank()) {
+            user.setUsername(req.getUsername());
+        }
 
         if (req.getFirstName() != null && !req.getFirstName().isBlank()) {
             user.setFirstName(req.getFirstName());
@@ -100,6 +106,11 @@ public class UserService {
         if (req.getPhone() != null && !req.getPhone().isBlank()) {
             user.setPhone(req.getPhone());
         }
+
+        if (req.getEmail() != null && !req.getEmail().isBlank()) {
+            user.setEmail(req.getEmail());
+        }
+
         if (req.getRoles() != null && !req.getRoles().isEmpty()) {
             // biến List<String> roles -> Set<Role> tương tự resolveCategories
             user.setRoles(resolveRoles(req.getRoles()));
@@ -111,10 +122,14 @@ public class UserService {
         Users saved = userRepository.save(user);
         return userMapper.toUserResponse(saved);
     }
-
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteUser(String userId) {
         Users user = userRepository.findById(userId).orElse(null);
         if (user != null) {
+            Set<Roles> roles = user.getRoles();
+            for (Roles role : roles) {
+                if(Objects.equals(role.getName(), "ADMIN")) throw new AppException(ErrorCode.USER_DELETE_FAILED);
+            }
             userRepository.delete(user);
         }
     }

@@ -34,11 +34,14 @@ const handleEdit = async () => {
   try {
     // Gọi API update, trong đó có fetchUsers() để reload lại danh sách
     await userStore.updateUserAPI(editedUser.id, {
+      username: editedUser.username,
       firstName: editedUser.firstName,
       lastName: editedUser.lastName,
       dob: editedUser.dob,
       phone: editedUser.phone,
-      roles: editedUser.selectedRole ? [editedUser.selectedRole] : []
+      roles: editedUser.selectedRole ? [editedUser.selectedRole] : [],
+      email: editedUser.email,
+      password: editedUser.password
     })
     // Nếu updateUserAPI chưa fetch lại thì bạn có thể gọi thêm:
     // await userStore.fetchUsers()
@@ -72,36 +75,38 @@ const toggleRoleDropdown = () => {
 
       <template #content>
         <div class="frame-wrapper">
+          <FrameRU v-model="editedUser.username" placeholder="User Name" />
           <FrameRU v-model="editedUser.firstName" placeholder="First Name" />
           <FrameRU v-model="editedUser.lastName" placeholder="Last Name" />
           <DatePickerFrame v-model="editedUser.dob" placeholder="DOB" />
           <FrameRU v-model="editedUser.phone" placeholder="Phone" />
+          <FrameRU v-model="editedUser.email" placeholder="Email" />
 
           <!-- Custom Role Selector matching FrameRU style -->
-          <div class="role-wrapper">
-            <div class="frame role-frame" :class="{ 'focused': isRoleDropdownOpen || editedUser.selectedRole }" @click="toggleRoleDropdown">
-              <label class="floating-label" :class="{ 'active': isRoleDropdownOpen || editedUser.selectedRole }">
-                Role
-              </label>
-              <div class="role-display">
-                {{ editedUser.selectedRole || 'Select Role' }}
-              </div>
-              <div class="dropdown-icon" :class="{ 'open': isRoleDropdownOpen }">▼</div>
-            </div>
+<!--          <div class="role-wrapper">-->
+<!--            <div class="frame role-frame" :class="{ 'focused': isRoleDropdownOpen || editedUser.selectedRole }" @click="toggleRoleDropdown">-->
+<!--              <label class="floating-label" :class="{ 'active': isRoleDropdownOpen || editedUser.selectedRole }">-->
+<!--                Role-->
+<!--              </label>-->
+<!--              <div class="role-display">-->
+<!--                {{ editedUser.selectedRole || 'Select Role' }}-->
+<!--              </div>-->
+<!--              <div class="dropdown-icon" :class="{ 'open': isRoleDropdownOpen }">▼</div>-->
+<!--            </div>-->
             
             <!-- Dropdown options -->
-            <div v-if="isRoleDropdownOpen" class="role-dropdown">
-              <div 
-                v-for="role in roleOptions" 
-                :key="role"
-                class="role-option"
-                :class="{ 'selected': editedUser.selectedRole === role }"
-                @click="selectRole(role)"
-              >
-                {{ role }}
-              </div>
-            </div>
-          </div>
+<!--            <div v-if="isRoleDropdownOpen" class="role-dropdown">-->
+<!--              <div -->
+<!--                v-for="role in roleOptions" -->
+<!--                :key="role"-->
+<!--                class="role-option"-->
+<!--                :class="{ 'selected': editedUser.selectedRole === role }"-->
+<!--                @click="selectRole(role)"-->
+<!--              >-->
+<!--                {{ role }}-->
+<!--              </div>-->
+<!--            </div>-->
+<!--          </div>-->
 
           <ButtonCRUD @click="handleEdit">
             <template #btn-text>
