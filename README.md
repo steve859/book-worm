@@ -76,6 +76,7 @@ Hệ thống quản lý cửa hàng sách được xây dựng với Spring Boot
 2. **Cài đặt dependencies:**
    ```bash
    npm install
+   npm install xlsx file-saver
    ```
 
 3. **Chạy ứng dụng Vue.js:**
