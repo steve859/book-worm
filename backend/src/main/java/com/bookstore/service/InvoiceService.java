@@ -205,7 +205,12 @@ public class InvoiceService {
         }
 
         invoice.setUserId(request.getUserId());
+        monthlyDebtReportDetailService.createMonthlyDebtReportDetail(invoice.getUserId(),invoice.getTotalAmount().multiply(BigDecimal.valueOf(-1)),"Debit");
         invoice.setTotalAmount(totalAmount);
+        if (invoice.getPaidAmount().compareTo(BigDecimal.ZERO) > 0) {
+            monthlyDebtReportDetailService.createMonthlyDebtReportDetail(
+                    invoice.getUserId(), invoice.getPaidAmount().multiply(BigDecimal.valueOf(-1)), "Credit");
+        }
         invoice.setPaidAmount(request.getPaidAmount());
         if (invoice.getPaidAmount() == null) {
             invoice.setPaidAmount(BigDecimal.ZERO);
@@ -215,6 +220,7 @@ public class InvoiceService {
         BigDecimal debtDifference = newDebt.subtract(oldDebt);
         customer.setDebtAmount(customer.getDebtAmount().add(debtDifference));
         userRepository.save(customer);
+
         monthlyDebtReportDetailService.createMonthlyDebtReportDetail(
                 invoice.getUserId(), totalAmount, "Debit");
 
