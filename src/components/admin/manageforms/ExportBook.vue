@@ -28,6 +28,8 @@ const customerDebts = ref([])
 
 // Thêm biến để quản lý dialog
 const showErrorDialog = ref(false)
+const receiptToDelete = ref(null)
+const errorMessage = ref('')
 
 onMounted(() => {
   store.fetchReceipts()
@@ -41,6 +43,7 @@ async function handleEdit(item) {
 async function handleAddExport() {
   // Kiểm tra xem đã chọn khách hàng chưa
   if (!selectedCustomer.value) {
+    errorMessage.value = 'Please select a customer before adding an invoice.'
     showErrorDialog.value = true
     return
   }
@@ -79,24 +82,35 @@ function addCustomerDebt(customerId, amount, date) {
   localStorage.setItem('customerDebts', JSON.stringify(customerDebts.value))
 }
 
-async function deleteReceipt(receipts) {
-  try {
-    await store.deleteExportReceiptForm(receipts.id)
-  } catch (error) {
-    console.error('Delete receipt failed:', error)
-
-    // Get error message from API response or use default
-    let message
-
-    if (error.response?.data?.message) {
-      message = error.response.data.message
-    } else if (error.friendlyMessage) {
-      message = error.friendlyMessage
-    }
-
-    showErrorDialog(message)
-  }
+function deleteReceipt(receipt) {
+  // Directly show error - invoices cannot be deleted due to payment linkage
+  receiptToDelete.value = receipt
+  errorMessage.value = `Cannot delete Invoice <strong>#${receipt.id}</strong> because it is linked to payment receipts.<br/><br/>
+    <strong>Policy:</strong> All invoices are protected from deletion to maintain payment audit trail and data integrity.`
+  showErrorDialog.value = true
 }
+
+// Removed confirmation dialog since deletion is completely disabled
+function confirmDeleteReceipt() {
+  // This function is no longer used but kept for compatibility
+  console.warn('[ExportBook] Invoice deletion is disabled by policy')
+}
+
+function cancelDeleteReceipt() {
+  // This function is no longer used but kept for compatibility
+  console.warn('[ExportBook] Invoice deletion is disabled by policy')
+}
+
+// TODO: Future enhancement - Add API call to check if invoice has payment receipts
+// async function checkInvoiceHasPayments(invoiceId) {
+//   try {
+//     const response = await api.get(`/invoices/${invoiceId}/payments-check`)
+//     return response.data.hasPayments
+//   } catch (error) {
+//     console.error('Failed to check invoice payments:', error)
+//     return false
+//   }
+// }
 const viewingReceipt = ref(null);
 
 async function handleViewReceipt(item) {
@@ -116,6 +130,7 @@ function goBack() {
 
 function closeErrorDialog() {
   showErrorDialog.value = false
+  errorMessage.value = ''
 }
 </script>
 
@@ -127,6 +142,12 @@ function closeErrorDialog() {
       </template>
       <template #content>
         <div class="scrollable-content">
+          <!-- Info Notice -->
+          <div class="info-notice">
+            <p>🚫 <strong>Invoice Deletion Policy:</strong> All invoices are protected and cannot be deleted to maintain
+              payment audit trail and data integrity.</p>
+          </div>
+
           <ExportReceiptTable :receipts="exportReceiptList" @view-receipt="handleViewReceipt" @edit-receipt="handleEdit"
             @delete-receipt="deleteReceipt" />
           <div class="action-bar">
@@ -152,8 +173,9 @@ function closeErrorDialog() {
     <EditExportForm :exportReceipt="editingReceipt" @close="closeEditForm" />
   </div>
 
-  <AppDialog v-model="showErrorDialog" title="Error" message="Please select a customer before adding an export receipt."
-    :show-cancel="false" @confirm="closeErrorDialog" />
+  <!-- Error Dialog -->
+  <AppDialog v-model="showErrorDialog" title="🚫 Invoice Deletion Blocked" :message="errorMessage" :show-cancel="false"
+    @confirm="closeErrorDialog" />
 </template>
 
 <style scoped>
@@ -182,5 +204,21 @@ function closeErrorDialog() {
   font-size: 14px;
   border-radius: 4px;
   border: 1px solid #ccc;
+}
+
+.info-notice {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.info-notice p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--vt-c-second-bg-color);
+  font-family: Montserrat;
+  font-weight: 500;
 }
 </style>
