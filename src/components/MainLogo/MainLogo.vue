@@ -1,7 +1,6 @@
 <script setup>
 import IconLogoWhite from './IconLogoWhite.vue'
 import IconTextBookWorm from './IconTextBookWorm.vue'
-import IconTextLibrary from './IconTextLibrary.vue'
 </script>
 <template>
 <div class = "main-logo">
