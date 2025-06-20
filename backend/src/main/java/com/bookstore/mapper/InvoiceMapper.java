@@ -17,19 +17,24 @@ import java.util.stream.Collectors;
 @Mapper(componentModel = "spring")
 public interface InvoiceMapper {
     Invoices toInvoice(InvoiceCreationRequest request);
+
     @Mapping(target = "bookDetails", expression = "java(mapBookDetails(invoice.getBookDetails()))")
     InvoiceResponse toInvoiceResponse(Invoices invoice);
+
     default Set<BookUpdateResponse> mapBookDetails(Set<BooksInvoices> bookInvoices) {
-        if (bookInvoices == null) return null;
+        if (bookInvoices == null)
+            return null;
         return bookInvoices.stream().map(bir -> {
             var book = bir.getBook();
             return BookUpdateResponse.builder()
                     .bookId(book.getBookId())
                     .name(book.getName())
                     .importPrice(book.getImportPrice())
+                    .sellPrice(bir.getSellPrice())
                     .quantity(bir.getQuantity())
                     .build();
         }).collect(Collectors.toSet());
     }
+
     void updateInvoice(@MappingTarget Invoices invoice, InvoiceUpdateRequest request);
 }

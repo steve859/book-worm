@@ -2,8 +2,8 @@
 import CRUDMainForm from './CRUDMainForm.vue'
 import TitleText from '../texts/TitleText.vue'
 import BookOutReceiptTable from '../tables/BookOutReceiptTable.vue'
-import {useUser} from '@/data/user'
-import {onMounted} from "vue";
+import { useUser } from '@/data/user'
+import { onMounted } from "vue";
 
 const props = defineProps({
   exportReceipt: {
@@ -38,18 +38,15 @@ const formatCurrency = (value) => {
           <p><strong>Receipt ID:</strong> {{ exportReceipt.id }}</p>
           <p><strong>Date:</strong> {{ exportReceipt.date }}</p>
           <p><strong>Total Amount:</strong> {{ formatCurrency(exportReceipt.total) }}</p>
-          <p><strong>Customer:</strong> {{ userStore.users?.find(u => u.id === exportReceipt.userId)?.name }}</p>
+          <p><strong>Customer:</strong> {{userStore.users?.find(u => u.id === exportReceipt.userId)?.name}}</p>
 
 
         </div>
 
-        <BookOutReceiptTable
-            :books="exportReceipt.books.map(book => ({
-            ...book,
-            sell_price: book.import_price * 1.05
-            }))"
-            :show-actions="false"
-        />
+        <BookOutReceiptTable :books="exportReceipt.books.map(book => ({
+          ...book,
+          sellPrice: book.sellPrice || book.export_price || (book.import_price * 1.05)
+        }))" :show-actions="false" />
       </div>
     </template>
   </CRUDMainForm>

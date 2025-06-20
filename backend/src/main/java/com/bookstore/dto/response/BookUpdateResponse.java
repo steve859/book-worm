@@ -15,6 +15,7 @@ public class BookUpdateResponse {
     Integer bookId;
     String name;
     BigDecimal importPrice;
+    BigDecimal sellPrice;
     int quantity;
 
 }

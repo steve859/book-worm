@@ -79,7 +79,10 @@ export const useExportReceiptFormStore = defineStore('exportForm', () => {
           id: b.bookId,
           title: b.name,
           quantity: b.quantity,
-          import_price: b.importPrice
+          import_price: b.importPrice,
+          sellPrice: b.sellPrice,
+          // Backward compatibility
+          export_price: b.sellPrice
         }))
       }
       return receiptDetails[id]
@@ -149,7 +152,7 @@ export const useExportReceiptFormStore = defineStore('exportForm', () => {
     }
   }
 
-async function deleteExportReceiptForm(id) {
+  async function deleteExportReceiptForm(id) {
     loading.value = true; error.value = null
     try {
       const { data } = await api.delete(`/invoices/${id}`);
