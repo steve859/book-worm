@@ -1,12 +1,9 @@
 package com.bookstore.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
-import java.math.BigDecimal;
 
-import com.bookstore.entity.Users;
-import com.bookstore.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,12 +11,13 @@ import com.bookstore.dto.request.PaymentReceiptCreationRequest;
 import com.bookstore.dto.request.PaymentReceiptUpdateRequest;
 import com.bookstore.dto.response.PaymentReceiptResponse;
 import com.bookstore.entity.PaymentReceipts;
+import com.bookstore.entity.Users;
 import com.bookstore.exception.AppException;
 import com.bookstore.exception.ErrorCode;
 import com.bookstore.mapper.PaymentReceiptMapper;
-import com.bookstore.repository.PaymentReceiptRepository;
-import com.bookstore.entity.MonthlyDebtReports;
 import com.bookstore.repository.MonthlyDebtReportRepository;
+import com.bookstore.repository.PaymentReceiptRepository;
+import com.bookstore.repository.UserRepository;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

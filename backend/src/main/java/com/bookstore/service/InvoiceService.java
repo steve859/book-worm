@@ -2,34 +2,39 @@ package com.bookstore.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.bookstore.dto.request.BookDeleteRequest;
-import com.bookstore.entity.Books;
-import com.bookstore.entity.BooksInvoices;
-import com.bookstore.entity.Users;
-import com.bookstore.mapper.BookMapper;
-import com.bookstore.repository.BookRepository;
-import com.bookstore.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.bookstore.dto.request.BookDeleteRequest;
 import com.bookstore.dto.request.InvoiceCreationRequest;
 import com.bookstore.dto.request.InvoiceUpdateRequest;
 import com.bookstore.dto.response.InvoiceResponse;
+import com.bookstore.entity.Books;
+import com.bookstore.entity.BooksInvoices;
 import com.bookstore.entity.Invoices;
+import com.bookstore.entity.Users;
 import com.bookstore.exception.AppException;
 import com.bookstore.exception.ErrorCode;
+import com.bookstore.mapper.BookMapper;
 import com.bookstore.mapper.InvoiceMapper;
+import com.bookstore.repository.BookRepository;
 import com.bookstore.repository.InvoiceRepository;
+import com.bookstore.repository.UserRepository;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -205,7 +210,8 @@ public class InvoiceService {
         }
 
         invoice.setUserId(request.getUserId());
-        monthlyDebtReportDetailService.createMonthlyDebtReportDetail(invoice.getUserId(),invoice.getTotalAmount().multiply(BigDecimal.valueOf(-1)),"Debit");
+        monthlyDebtReportDetailService.createMonthlyDebtReportDetail(invoice.getUserId(),
+                invoice.getTotalAmount().multiply(BigDecimal.valueOf(-1)), "Debit");
         invoice.setTotalAmount(totalAmount);
         if (invoice.getPaidAmount().compareTo(BigDecimal.ZERO) > 0) {
             monthlyDebtReportDetailService.createMonthlyDebtReportDetail(
@@ -236,16 +242,20 @@ public class InvoiceService {
         if (invoice != null) {
             Set<BooksInvoices> bookDetails = invoice.getBookDetails();
             Users user = userRepository.findById(invoice.getUserId()).orElse(null);
-            if(user == null) {
+            if (user == null) {
                 throw new AppException(ErrorCode.USER_NOT_EXISTED);
             }
-            user.setDebtAmount(user.getDebtAmount().subtract((invoice.getTotalAmount().subtract(invoice.getPaidAmount()))));
-            monthlyDebtReportDetailService.createMonthlyDebtReportDetail(invoice.getUserId(), invoice.getPaidAmount().multiply(BigDecimal.valueOf(-1)), "Credit");
-            monthlyDebtReportDetailService.createMonthlyDebtReportDetail(invoice.getUserId(), invoice.getTotalAmount().multiply(BigDecimal.valueOf(-1)), "Debit");
+            user.setDebtAmount(
+                    user.getDebtAmount().subtract((invoice.getTotalAmount().subtract(invoice.getPaidAmount()))));
+            monthlyDebtReportDetailService.createMonthlyDebtReportDetail(invoice.getUserId(),
+                    invoice.getPaidAmount().multiply(BigDecimal.valueOf(-1)), "Credit");
+            monthlyDebtReportDetailService.createMonthlyDebtReportDetail(invoice.getUserId(),
+                    invoice.getTotalAmount().multiply(BigDecimal.valueOf(-1)), "Debit");
             for (BooksInvoices detail : bookDetails) {
                 Books book = detail.getBook();
-                book.setQuantity(book.getQuantity()+detail.getQuantity());
-                monthlyInventoryReportDetailService.createMonthlyInventoryReportDetail(book.getBookId(), -detail.getQuantity(), "Export");
+                book.setQuantity(book.getQuantity() + detail.getQuantity());
+                monthlyInventoryReportDetailService.createMonthlyInventoryReportDetail(book.getBookId(),
+                        -detail.getQuantity(), "Export");
             }
             invoiceRepository.delete(invoice);
         }

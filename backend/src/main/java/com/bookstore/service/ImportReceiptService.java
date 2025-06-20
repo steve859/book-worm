@@ -4,8 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,7 +72,7 @@ public class ImportReceiptService {
         List<BookUpdateRequest> inputBooks = request.getBookDetails();
         int totalQuantity = inputBooks.stream().mapToInt(BookUpdateRequest::getQuantity).sum();
         Double paramValue = parameterService.getParamValue("minImportQuantity");
-        Integer minImportQuantity = paramValue != null ? paramValue.intValue() : 0;
+        int minImportQuantity = paramValue != null ? paramValue.intValue() : 0;
         if (totalQuantity < minImportQuantity) {
             throw new AppException(ErrorCode.INSUFFICIENT_IMPORT_QUANTITY);
         }
@@ -134,11 +134,11 @@ public class ImportReceiptService {
 
         List<BookUpdateRequest> inputBooks = request.getBookDetails();
         int totalQuantity = inputBooks.stream().mapToInt(BookUpdateRequest::getQuantity).sum();
-
-        if (totalQuantity < 150) {
+        Double paramValue = parameterService.getParamValue("minImportQuantity");
+        int minImportQuantity = paramValue != null ? paramValue.intValue() : 0;
+        if (totalQuantity < minImportQuantity) {
             throw new AppException(ErrorCode.INSUFFICIENT_IMPORT_QUANTITY);
         }
-
         Map<Integer, BooksImportReceipts> existingBookDetailsMap = importReceipt.getBookDetails().stream()
                 .collect(Collectors.toMap(
                         b -> b.getBook().getBookId(),
