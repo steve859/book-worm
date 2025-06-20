@@ -14,9 +14,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UserUpdateRequest {
     String password;
+    String username;
     String firstName;
     String lastName;
     LocalDate dob;
     String phone;
+    String email;
     List<String> roles;
 }
