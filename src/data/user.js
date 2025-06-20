@@ -18,9 +18,9 @@ export const useUser = defineStore('user', () => {
     return users.value.filter(u => {
       const fullName = `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim().toLowerCase()
       return (
-        fullName.includes(q) ||
-        (u.email ?? '').toLowerCase().includes(q) ||
-        u.username.toLowerCase().includes(q)
+          fullName.includes(q) ||
+          (u.email ?? '').toLowerCase().includes(q) ||
+          u.username.toLowerCase().includes(q)
       )
     })
   })
@@ -34,10 +34,10 @@ export const useUser = defineStore('user', () => {
     try {
       const resp = await api.get('/users')
       const list = Array.isArray(resp.data)
-        ? resp.data
-        : Array.isArray(resp.data.result)
-          ? resp.data.result
-          : []
+          ? resp.data
+          : Array.isArray(resp.data.result)
+              ? resp.data.result
+              : []
 
       users.value = list.map(u => ({
         id: u.id,
@@ -56,7 +56,10 @@ export const useUser = defineStore('user', () => {
         _raw: u
       }))
     } catch (e) {
-      console.error('[UserStore] fetchUsers failed:', e)
+      console.error('[UserStore] fetchUsers failed:',
+          e.response?.status,
+          e.response?.data || e.message
+      )
       error.value = e
     } finally {
       loading.value = false

@@ -46,7 +46,7 @@ const formatCurrency = (value) => {
         <BookOutReceiptTable
             :books="exportReceipt.books.map(book => ({
             ...book,
-            export_price: book.import_price * 1.05
+            sell_price: book.import_price * 1.05
             }))"
             :show-actions="false"
         />

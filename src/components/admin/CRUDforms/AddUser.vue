@@ -25,7 +25,7 @@ const newUser = reactive({
   username: '',
   dob: '',
   phone: '',
-  password: '',
+  password: '11111111',
 })
 
 const handleAdd = async () => {
@@ -108,7 +108,6 @@ function handleDialogConfirm() {
       <template #content>
         <div class="frame-wrapper">
           <FrameRU v-model="newUser.username" placeholder="Username" />
-          <FrameRU v-model="newUser.password" placeholder="Password" />
           <FrameRU v-model="newUser.firstName" placeholder="Firstname" />
           <FrameRU v-model="newUser.lastName" placeholder="Lastname" />
           <FrameRU v-model="newUser.email" placeholder="Email" />

@@ -145,7 +145,8 @@ public class InvoiceService {
         if (customerOpt.isEmpty())
             throw new AppException(ErrorCode.USER_NOT_EXISTED);
         Users customer = customerOpt.get();
-        BigDecimal oldDebt = invoice.getDebtAmount() != null ? invoice.getDebtAmount() : BigDecimal.ZERO;
+        BigDecimal oldTotalAmount = invoice.getTotalAmount() != null ? invoice.getTotalAmount() : BigDecimal.ZERO;
+        BigDecimal oldPaidAmount = invoice.getPaidAmount() != null ? invoice.getPaidAmount() : BigDecimal.ZERO;
         Map<Integer, BooksInvoices> oldBookDetailMap = invoice.getBookDetails().stream()
                 .collect(Collectors.toMap(b -> b.getBook().getBookId(), b -> b));
 
@@ -210,30 +211,28 @@ public class InvoiceService {
         }
 
         invoice.setUserId(request.getUserId());
-        monthlyDebtReportDetailService.createMonthlyDebtReportDetail(invoice.getUserId(),
-                invoice.getTotalAmount().multiply(BigDecimal.valueOf(-1)), "Debit");
         invoice.setTotalAmount(totalAmount);
-        if (invoice.getPaidAmount().compareTo(BigDecimal.ZERO) > 0) {
+        invoice.setPaidAmount(request.getPaidAmount() != null ? request.getPaidAmount() : BigDecimal.ZERO);
+
+        BigDecimal netTotalDiff = totalAmount.subtract(oldTotalAmount);
+        BigDecimal netPaidDiff = invoice.getPaidAmount().subtract(oldPaidAmount);
+
+        if (netTotalDiff.compareTo(BigDecimal.ZERO) != 0) {
             monthlyDebtReportDetailService.createMonthlyDebtReportDetail(
-                    invoice.getUserId(), invoice.getPaidAmount().multiply(BigDecimal.valueOf(-1)), "Credit");
+                    invoice.getUserId(), netTotalDiff, "Debit");
         }
-        invoice.setPaidAmount(request.getPaidAmount());
-        if (invoice.getPaidAmount() == null) {
-            invoice.setPaidAmount(BigDecimal.ZERO);
+
+        if (netPaidDiff.compareTo(BigDecimal.ZERO) != 0) {
+            monthlyDebtReportDetailService.createMonthlyDebtReportDetail(
+                    invoice.getUserId(), netPaidDiff, "Credit");
         }
+
         BigDecimal newDebt = totalAmount.subtract(invoice.getPaidAmount());
         invoice.setDebtAmount(newDebt);
-        BigDecimal debtDifference = newDebt.subtract(oldDebt);
+        BigDecimal debtDifference = newDebt.subtract(oldTotalAmount.subtract(oldPaidAmount));
         customer.setDebtAmount(customer.getDebtAmount().add(debtDifference));
         userRepository.save(customer);
 
-        monthlyDebtReportDetailService.createMonthlyDebtReportDetail(
-                invoice.getUserId(), totalAmount, "Debit");
-
-        if (invoice.getPaidAmount().compareTo(BigDecimal.ZERO) > 0) {
-            monthlyDebtReportDetailService.createMonthlyDebtReportDetail(
-                    invoice.getUserId(), invoice.getPaidAmount(), "Credit");
-        }
         return invoiceMapper.toInvoiceResponse(invoiceRepository.save(invoice));
     }
 
