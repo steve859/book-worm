@@ -72,10 +72,13 @@ export const useUser = defineStore('user', () => {
     try {
       loading.value = true
       error.value = null
+      console.log('[UserStore] Creating user:', userData.username)
       await api.post('/users', userData)
+      console.log('[UserStore] User created successfully')
       await fetchUsers()
       return true
     } catch (e) {
+      console.error('[UserStore] addUser failed:', e.response?.status, e.response?.data || e.message)
       error.value = e
       return false
     } finally {
