@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import {onMounted, ref} from 'vue'
 import { useUser } from '@/data/user'
 
 import ViewIcon from '@/assets/icons-vue/receipt.vue'
@@ -14,6 +14,10 @@ const emit = defineEmits(['view-receipt', 'edit-receipt', 'delete-receipt'])
 
 const dialog = ref(false)
 const receiptToDelete = ref(null)
+const userStore = useUser()
+onMounted(() => {
+  userStore.fetchUsers()
+})
 
 const openDeleteDialog = (receipt) => {
   receiptToDelete.value = receipt
@@ -30,7 +34,7 @@ const headers = [
   { title: 'ID', key: 'id' },
   { title: 'Time', key: 'createAt' },
   { title: 'Total Amount', key: 'totalAmount' },
-  { title: 'Customer', key: 'customer'},
+  { title: 'Customer', key: 'payerId'},
   { title: 'Action', key: 'action', sortable: false },
 ]
 </script>
@@ -45,6 +49,9 @@ const headers = [
       :items-per-page="-1"
       hide-default-footer
     >
+      <template #item.payerId="{ item }">
+        <span>{{ userStore.users?.find(u => u.id === item.payerId)?.name }}</span>
+      </template>
       <template #item.action="{ item }">
         <div class="action-icons">
           <v-tooltip text="Delete" location="top">
