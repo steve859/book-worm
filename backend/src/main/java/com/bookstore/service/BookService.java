@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import com.bookstore.repository.MonthlyInventoryReportDetailRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +46,8 @@ public class BookService {
     private MonthlyInventoryReportDetailService monthlyInventoryReportDetailService;
     @Autowired
     ParameterService parameterService;
+    @Autowired
+    private MonthlyInventoryReportDetailRepository monthlyInventoryReportDetailRepository;
 
     private Set<Authors> resolveAuthors(List<String> authorsString) {
         Set<Authors> authorsSet = new HashSet<>();
@@ -136,7 +139,7 @@ public class BookService {
             // Clear many-to-many relationships first to avoid constraint issues
             book.getAuthors().clear();
             book.getCategories().clear();
-
+            monthlyInventoryReportDetailService.createMonthlyInventoryReportDetail(book.getBookId(),book.getQuantity(),"Export");
             // Save to persist the relationship clearing
             bookRepository.save(book);
 
