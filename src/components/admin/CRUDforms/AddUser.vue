@@ -25,8 +25,7 @@ const newUser = reactive({
   username: '',
   dob: '',
   phone: '',
-  role: '',
-  password: '11111111',
+  password: '',
 })
 
 const handleAdd = async () => {
@@ -57,7 +56,6 @@ const handleAdd = async () => {
     username: newUser.username,
     dob: newUser.dob,
     phone: newUser.phone,
-    roles: [newUser.role],
     password: newUser.password
     // Note: roles are automatically assigned as USER by backend
   }
@@ -68,8 +66,8 @@ const handleAdd = async () => {
   } else {
     // Get friendly error message from store
     const errorMsg = store.error?.friendlyMessage ||
-      store.error?.response?.data?.message ||
-      'Unable to create user. Please check your input and try again.'
+        store.error?.response?.data?.message ||
+        'Unable to create user. Please check your input and try again.'
     showErrorDialog('Failed to Add User', errorMsg)
   }
 }
@@ -133,7 +131,7 @@ function handleDialogConfirm() {
 
     <!-- Success/Error Dialog -->
     <AppDialog v-model="showDialog" :title="dialogTitle" :message="dialogMessage" :show-cancel="false"
-      @confirm="handleDialogConfirm" />
+               @confirm="handleDialogConfirm" />
   </div>
 </template>
 
@@ -156,8 +154,8 @@ function handleDialogConfirm() {
 
 .role-info {
   text-align: center;
-  background: rgba(var(--vt-c-second-bg-color-rgb), 0.1);
-  border: 1px solid rgba(var(--vt-c-second-bg-color-rgb), 0.2);
+  background: rgba(var(--vt-c-second-bg-color), 0.1);
+  border: 1px solid rgba(var(--vt-c-second-bg-color), 0.2);
   border-radius: 8px;
   padding: 12px 20px;
   margin: 8px 0;
