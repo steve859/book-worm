@@ -11,13 +11,12 @@ import CRUDMainForm from './CRUDMainForm.vue'
 const props = defineProps({
   book: Object
 })
-const emit = defineEmits(['close','update-book'])
+const emit = defineEmits(['close', 'update-book'])
 
 const editedBook = reactive({
   bookId: props.book.bookId,
   name: props.book.name,
   publishedYear: String(props.book.publishedYear),
-  importPrice: String(props.book.importPrice),
   quantity: String(props.book.quantity),
   authors: Array.isArray(props.book.authors) ? [...props.book.authors] : [],
   categories: Array.isArray(props.book.categories) ? [...props.book.categories] : []
@@ -27,7 +26,6 @@ function handleEdit() {
   const dataToEmit = {
     ...editedBook,
     publishedYear: Number(editedBook.publishedYear),
-    importPrice: Number(editedBook.importPrice),
     quantity: Number(editedBook.quantity),
   }
   emit('update-book', dataToEmit)
@@ -45,7 +43,6 @@ function handleEdit() {
         <div class="frame-wrapper">
           <FrameRU v-model="editedBook.name" placeholder="Title" />
           <FrameAuthors v-model="editedBook.authors" placeholder="Authors" />
-          <FrameRU v-model="editedBook.importPrice" placeholder="Import Price" />
           <FrameRU v-model="editedBook.publishedYear" placeholder="Published Year" />
           <FrameCategories v-model="editedBook.categories" placeholder="Categories" />
           <ButtonCRUD @click="handleEdit">
